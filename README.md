@@ -1,50 +1,81 @@
-# template-for-proposals
+# Curtailing the power of "Thenables"
 
-A repository template for ECMAScript proposals.
+Quoting MDN:
 
-## Before creating a proposal
+> The JavaScript ecosystem had made multiple Promise implementations long before it
+> became part of the language. Despite being represented differently internally, at
+> the minimum, all Promise-like objects implement the Thenable interface. A thenable
+> implements the `.then()` method, which is called with two callbacks: one for when the
+> promise is fulfilled, one for when it's rejected. Promises are thenables as well.
+>
+> To interoperate with the existing Promise implementations, the language allows using
+> thenables in place of promises. For example, Promise.resolve will not only resolve
+> promises, but also trace thenables.
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to “champion” your proposal
+The problem we would like to address is that `then` lookup follows the whole
+prototype chain. Including builtin prototypes and `Object.prototype`.
 
-## Create your proposal repo
+## Why is this a problem?
 
-Follow these steps:
-  1. Click the green [“use this template”](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1. Update ecmarkup and the biblio to the latest version: `npm install --save-dev ecmarkup@latest && npm install --save-dev --save-exact @tc39/ecma262-biblio@latest`.
-  1. Go to your repo settings page:
-      1. Under “General”, under “Features”, ensure “Issues” is checked, and disable “Wiki”, and “Projects” (unless you intend to use Projects)
-      1. Under “Pull Requests”, check “Always suggest updating pull request branches” and “automatically delete head branches”
-      1. Under the “Pages” section on the left sidebar, and set the source to “deploy from a branch”, select “gh-pages” in the branch dropdown, and then ensure that “Enforce HTTPS” is checked.
-      1. Under the “Actions” section on the left sidebar, under “General”, select “Read and write permissions” under “Workflow permissions” and click “Save”
-  1. [“How to write a good explainer”][explainer] explains how to make a good first impression.
+The most concrete one is security vulnerabilities. We must be ever-vigilant about
+this compatability supporting feature in all standard work, and throughout
+the web-platform. Failure to do so has the consequence of possible exploitation:
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+- [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification.
+- [Out of bound access in ReadableStream::Close](https://issues.chromium.org/issues/40051366)
+- [CVE-2021-21206: Chrome Use-After-Free in Animations](https://googleprojectzero.github.io/0days-in-the-wild//0day-RCAs/2021/CVE-2021-21206.html)
+- ... others. 
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+The reason this particular issue is fingered for causing security vulnerabities is
+that it adds many paths for user code execution which otherwise don't exist, and
+is not always obviously a possbility.
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/HEAD/spec.emu).
-      ```
+Beyond security, this also just injects complexity. There are test cases in WPT that
+exist purely to work out the expected behaviour [for someone breaking `then`](https://searchfox.org/mozilla-central/source/testing/web-platform/tests/fetch/api/response/response-stream-with-broken-then.any.js#4-24)
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is “tc39”
-      and *PROJECT* is “template-for-proposals”.
+## How do I propose we fix this?
 
+As a Stage 0 proposal, I'm convinced we need to solve this, but am less convinced
+of a particular solution.
 
-## Maintain your proposal repo
+During the remediation of the specification security issue, for defence in depth a
+few compatible resolutions were proposed:
 
-  1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it “.html”)
-  1. Any commit that makes meaningful changes to the spec, should run `npm run build` to verify that the build will succeed and the output looks as expected.
-  1. Whenever you update `ecmarkup`, run `npm run build` to verify that the build will succeed and the output looks as expected.
+1. Normative: make Object.prototype exotically reject "then" properties. Change the
+   `[[DefineOwnProperty]]` MOP operation on `Object.prototype` to silently noop when
+   the property key is `"then"`.
+2. Normative: make some promise resolve functions not respect thenables. Exclude
+   certain internal resolution functions to not respect thenables.
 
-  [explainer]: https://github.com/tc39/how-we-work/blob/HEAD/explainer.md
+I would propose a third solution:
+
+- Specification defined prototypes gain a new internal slot `[[InternalProto]]`
+- The lookup for the "then" property changes from `Get` to `GetNonInternal`, a new
+  specification AO which walks the prototype chain, but stops as soon as it
+  encounters a prototype with the `[[InternalProto]]` internal slot.
+
+## Compatability
+
+I suspect this will be almost entirely web compatible, but it would be worthwhile
+to investigate before this hits Stage 4.
+
+## HTML Integration
+
+We would further want to recommend that builtin prototypes in embeddings (particularly HTML) 
+also get `[[InternalSlot]]`. 
+
+## Performance:
+
+This introduces a new form of `Get` which will require implementation in a
+performant manner given that promise resolution is a performance sensitive
+operation.
+
+I believe that this ultimately should be more optimizatiable than a straight up get,
+as all our regular optimizations will apply, and less prototypes will need traversal.
+
+## Prior Art:
+
+- [`Symbol.thenable`](https://github.com/tc39/proposal-symbol-thenable) "Withdrawn;
+  changing thenability on Module Namespace objects is not web compatible, and
+  allowing non-Promise use of "then" is not worth slowing down all Promise
+  operations"
