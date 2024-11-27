@@ -62,7 +62,7 @@ to investigate before this hits Stage 4.
 ## HTML Integration
 
 We would further want to recommend that builtin prototypes in embeddings (particularly HTML) 
-also get `[[InternalSlot]]`. 
+also get `[[InternalProto]]` internal slot. 
 
 ## Performance:
 
