@@ -24,7 +24,7 @@ the web-platform. Failure to do so has the consequence of possible exploitation:
 - [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification.
 - [Out of bound access in ReadableStream::Close](https://issues.chromium.org/issues/40051366)
 - [CVE-2021-21206: Chrome Use-After-Free in Animations](https://googleprojectzero.github.io/0days-in-the-wild//0day-RCAs/2021/CVE-2021-21206.html)
-- ... others. 
+- [CVE-2024-9086](https://www.welivesecurity.com/en/eset-research/romcom-exploits-firefox-and-windows-zero-days-in-the-wild/)
 
 The reason this particular issue is fingered for causing security vulnerabities is
 that it adds many paths for user code execution which otherwise don't exist, and
