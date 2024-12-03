@@ -73,9 +73,12 @@ operation.
 I believe that this ultimately should be more optimizatiable than a straight up get,
 as all our regular optimizations will apply, and less prototypes will need traversal.
 
-## Prior Art:
+## Prior Art & Related Work
 
 - [`Symbol.thenable`](https://github.com/tc39/proposal-symbol-thenable) "Withdrawn;
   changing thenability on Module Namespace objects is not web compatible, and
   allowing non-Promise use of "then" is not worth slowing down all Promise
   operations"
+- [Proposal Stabilize](https://github.com/Agoric/proposal-stabilize/) is trying to
+  provide generalizable machineries for invariants -- this could be more of
+  an invariant we could provide to user code as well. 
