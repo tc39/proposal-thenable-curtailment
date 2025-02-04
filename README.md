@@ -32,7 +32,7 @@ that it adds many paths for user code execution which otherwise don't exist, and
 is not always obviously a possbility.
 
 Of particular danger is where specification authors think of newborn objects of known
-types as known quantities, only to call Promise.resolve on them. At this point 
+types as known quantities, only to call `Promise.resolve` on them. At this point 
 when they are provided a JS wrapper the JS wrapper typically has Object as their 
 prototype, making them vulnerable to thenables. 
 
