@@ -75,7 +75,8 @@ No. Of the previously described security bugs this mitigation would fix
 
 It would not have fixed 
 
-- [CVE-2024-9086](https://www.welivesecurity.com/en/eset-research/romcom-exploits-firefox-and-windows-zero-days-in-the-wild/), as in this bug it would be sufficien to add the "then" property to an instance already escaped to script
+- [CVE-2024-9086](https://www.welivesecurity.com/en/eset-research/romcom-exploits-firefox-and-windows-zero-days-in-the-wild/),
+   as in this bug it would be sufficient to add the "then" property to an instance already escaped to script
 
 I am not sure about the Chrome UAF in animation.
 
