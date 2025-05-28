@@ -115,3 +115,6 @@ resolving a WebIDL dictionary works. Personally I would start at the language th
 - [Proposal Stabilize](https://github.com/Agoric/proposal-stabilize/) is trying to
   provide generalizable machineries for invariants -- this could be more of
   an invariant we could provide to user code as well. 
+
+## Proposal History
+- [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) 
