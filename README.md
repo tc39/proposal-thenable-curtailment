@@ -1,6 +1,7 @@
 # Curtailing the power of "Thenables"
 
 **Champion**: Matthew Gaudet (Mozilla)
+
 **Stage**: 1 (As of February Plenary) 
 
 ## Introduction & Problem:
