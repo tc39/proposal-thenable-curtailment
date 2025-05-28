@@ -1,5 +1,10 @@
 # Curtailing the power of "Thenables"
 
+**Champion**: Matthew Gaudet (Mozilla)
+**Stage**: 1 (As of February Plenary) 
+
+## Introduction & Problem:
+
 Quoting MDN:
 
 > The JavaScript ecosystem had made multiple Promise implementations long before it
@@ -117,4 +122,4 @@ resolving a WebIDL dictionary works. Personally I would start at the language th
   an invariant we could provide to user code as well. 
 
 ## Proposal History
-- [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) 
+- [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) -- Achieved Stage 1 
