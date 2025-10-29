@@ -124,3 +124,4 @@ resolving a WebIDL dictionary works. Personally I would start at the language th
 
 ## Proposal History
 - [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) -- Achieved Stage 1. [(Notes)](https://github.com/tc39/notes/blob/main/meetings/2025-02/february-18.md#curtailing-the-power-of-thenables-for-stage-1)
+- [Presented at July 2025 Plenary](https://docs.google.com/presentation/d/1_RCnI7dzyA1COgi_Ib7GkmHioV1nVSEMmZvy0bvJ8Kk/edit?slide=id.p#slide=id.p). ([Notes](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-29.md#how-to-make-thenables-safer) & [Notes from Continuation](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-30.md#continuation-how-to-make-thenables-safer))
