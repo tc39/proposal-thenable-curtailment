@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf8">
+<link rel="stylesheet" href="./spec.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
+<script src="./spec.js"></script>
+<pre class="metadata">
+title: MaybeDeferredResolvePromise
+stage: 1
+contributors: Matthew Gaudet
+</pre>
+
+<emu-clause id="sec-safe-resolve-promise">
+  <h1>MaybeDeferredPromiseResolve Abstract Operations</h1>
+
+  <p>These operations provide a mechanism for resolving promises without risk of synchronously executing arbitrary user code. When the resolution value is an object that could trigger user code (such as a Proxy, a thenable, or an object with accessor properties), the actual resolution is deferred to a future job.</p>
+
+  <emu-clause id="sec-requires-deferred-promise-resolution" type="abstract operation">
+    <h1>
+      RequiresDeferredPromiseResolution (
+        _value_: an ECMAScript language value,
+      ): either a normal completion containing a Boolean or a throw completion
+    </h1>
+    <dl class="header">
+      <dt>description</dt>
+      <dd>It determines whether resolving a promise with _value_ might execute user code that should be deferred to avoid running user code</dd>
+    </dl>
+    <emu-alg>
+      1. Let _o_ be _value_.
+      1. While _o_ is defined, Repeat:
+        1. If _value_ is not an Object, return *false*.
+        1. If _value_ has a [[ProxyHandler]] internal slot, return *true*.
+        1. Let _desc_ be _o_.[[GetOwnProperty]](*"then"*).
+        1. If _desc_ is not *undefined* and IsAccessorDescriptor(_desc_) is *true*, return *true*.
+        1. Set _o_ to _o_.[[GetPrototypeOf]]().
+      1. If _desc_.[[Value]] is not *undefined*, return *true*.
+      1. Let _constructorDesc_ be ? _value_.[[GetOwnProperty]](*"constructor"*).
+      1. If _constructorDesc_ is not *undefined*, then
+        1. If IsAccessorDescriptor(_constructorDesc_) is *true*, return *true*.
+      1. Return *false*.
+    </emu-alg>
+    <emu-note>
+      <p>I've sketched this asuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this</p>
+    </emu-note>
+  </emu-clause>
+
+  <emu-clause id="sec-new-deferred-safe-resolve-job" type="abstract operation">
+    <h1>
+      NewDeferredSafeResolveJob (
+        _promiseToResolve_: a Promise,
+        _resolution_: an ECMAScript language value,
+        _realm_: a Realm Record,
+      ): a Record with fields [[Job]] (a Job Abstract Closure) and [[Realm]] (a Realm Record)
+    </h1>
+    <dl class="header">
+      <dt>description</dt>
+      <dd>It returns a Job that performs deferred promise resolution in a microtask.</dd>
+    </dl>
+    <emu-alg>
+      1. Let _job_ be a new Job Abstract Closure with no parameters that captures _promiseToResolve_ and _resolution_ and performs the following steps when called:
+        1. Return ? PromiseResolve(_promiseToResolve_, _resolution_).
+      1. Return the Record { [[Job]]: _job_, [[Realm]]: _realm_ }.
+    </emu-alg>
+  </emu-clause>
+
+  <emu-clause id="sec-safe-resolve-promise-operation" type="abstract operation">
+    <h1>
+      MaybeDeferredPromiseResolve (
+        _promise_: a Promise,
+        _resolution_: an ECMAScript language value,
+      ): either a normal completion containing *undefined* or a throw completion
+    </h1>
+    <dl class="header">
+      <dt>description</dt>
+      <dd>It resolves _promise_ with _resolution_, deferring to a microtask if _resolution_ might execute user code.</dd>
+    </dl>
+    <emu-alg>
+      1. Assert: _promise_ is a Promise.
+      1. Assert: _promise_.[[PromiseState]] is ~pending~.
+      1. Let _requiresDeferred_ be ? RequiresDeferredPromiseResolution(_resolution_).
+      1. If _requiresDeferred_ is *true*, then
+        1. Set _promise_.[[PromiseState]] to ~deferred~.
+        1. Let _callerRealm_ be the current Realm Record.
+        1. Let _job_ be NewDeferredSafeResolveJob(_promise_, _resolution_, _callerRealm_).
+        1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
+        1. Return *undefined*.
+      1. Return ? PromiseResolve(_promise_, _resolution_).
+    </emu-alg>
+    <emu-note>
+      <p>~deffered~ is a new state that I've not run through the rest of the spec, but the intention is that it prevents future resolutions from overriding the resolution applied here. </p>
+    </emu-note>
+  </emu-clause>
+</emu-clause>
