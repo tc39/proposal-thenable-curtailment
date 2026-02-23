@@ -19,7 +19,9 @@ Quoting MDN:
 > promises, but also trace thenables.
 
 The problem we would like to address is that `then` lookup follows the whole
-prototype chain. Including builtin prototypes and `Object.prototype`.
+prototype chain. Including builtin prototypes and `Object.prototype`. This is
+particularly dangerous when working with types where 'thenable' dispatch was
+unexpected.
 
 ## Why is this a problem?
 
@@ -38,79 +40,55 @@ that it adds many paths for user code execution which otherwise don't exist, and
 is not always obviously a possbility.
 
 Of particular danger is where specification authors think of newborn objects of known
-types as known quantities, only to call `Promise.resolve` on them. At this point 
-when they are provided a JS wrapper the JS wrapper typically has Object as their 
-prototype, making them vulnerable to thenables. 
+types as known quantities, only to call `Promise.resolve` on them. At this point
+when they are provided a JS wrapper the JS wrapper typically has Object as their
+prototype, making them vulnerable to thenables.
 
 Beyond security, this also just injects complexity. There are test cases in WPT that
 exist purely to work out the expected behaviour [for someone breaking `then`](https://searchfox.org/mozilla-central/source/testing/web-platform/tests/fetch/api/response/response-stream-with-broken-then.any.js#4-24)
 
 ## How do I propose we fix this?
 
-As a Stage 0 proposal, I'm convinced we should try to improve the situation here,
-but am less convinced of a particular solution.
+I'd like to propose we add a (maybe-)delaying resolve operation. As per ususal naming will be a substantial
+challenging, but a general principle here would be, it is functionally identical to
+[`PromiseResolve`](https://tc39.es/ecma262/#sec-promise-resolve) except there is a pre-step where
+we check for the conditions under which we could run user-code. If we cannot run any user code, we simply
+tail-call into `PromiseResolve`. If we *could* run user-code, we instead enqueue a new job whose
+responsibility is to call into `PromiseResolve`, while also putting the promise into a 'parked' state
+such that any future resolutions are ignored (Thank you very much to Mark Miller for catching this
+requirement in TG3 review discussion).
 
-During the remediation of the specification security issue, for defence in depth a
-few compatible resolutions were proposed:
+The next step is to decide how to consume this. There is interest from the Mozilla DOM to explore
+using this to replace [the steps for resolving a promise in WebIDL](https://webidl.spec.whatwg.org/#resolve)
+and more generally powering all the promise resolution code in Mozilla's DOM. This would help make
+C++ code safer by making promise resolution into an operation that never runs script, which
+simplifies the reasoning required when implementing code.
 
-1. Normative: make Object.prototype exotically reject "then" properties. Change the
-   `[[DefineOwnProperty]]` MOP operation on `Object.prototype` to silently noop when
-   the property key is `"then"`.
-2. Normative: make some promise resolve functions not respect thenables. Exclude
-   certain internal resolution functions to not respect thenables.
+Another topic of discussion would be: If we builds this capability, do we expose it to userland code
+and if so, under what name.
 
-I would propose a third solution:
+## Is this a bulletproof fix?
 
-- Specification defined prototypes gain a new internal slot `[[InternalProto]]`
-- The lookup for the "then" property changes from `Get` to `GetNonInternal`, a new
-  specification AO which walks the prototype chain, but stops as soon as it
-  encounters a prototype with the `[[InternalProto]]` internal slot.
+No. The impact of this will of course depend entirely on the scope of adoption.s
 
-## HTML Integration
-
-We would further want to recommend that builtin prototypes in embeddings (particularly HTML) 
-also get `[[InternalProto]]` internal slot. 
-
-## Is this a bulletproof fix? 
-
-No. Of the previously described security bugs this mitigation would fix 
+Of the previously described security bugs this mitigation would fix
 
 - [Out of bound access in ReadableStream::Close](https://issues.chromium.org/issues/40051366)
-- [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification.
-- Some of the undisclosed bugs. 
-
-It would not have fixed 
-
+- Some of the undisclosed bugs.
 - [CVE-2024-9086](https://www.welivesecurity.com/en/eset-research/romcom-exploits-firefox-and-windows-zero-days-in-the-wild/),
    as in this bug it would be sufficient to add the "then" property to an instance already escaped to script
+- I suspect the Chrome Animation UAF but am not 100% sure
 
-I am not sure about the Chrome UAF in animation.
+It would not however fix
+
+- [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification, as
+  it's very unlikely we would adopt this new operation on that path.
 
 ## Compatibility
 
-I have telemetry probes that suggest caution here. From Firefox Nightly: 
-
-1. 2.3% of pages resolve a thenable object.
-2. Of those 2.3%, 2.0% find the thenable function on a prototype
-3. Of those, 0.12% of pages load the "thenable" function off the prototype of a "Standard" class,
-   which is basically anything in [this list](https://searchfox.org/mozilla-central/source/js/public/ProtoKey.h#68-169)
-   except Promise is explicitly carved out.
-
-Note the 0.12% is an undercount -- we did not gather data for HTML builtin prototypes. 
-
-## Performance:
-
-This introduces a new form of `Get` which will require implementation in a
-performant manner given that promise resolution is a performance sensitive
-operation.
-
-I believe that this ultimately should be more optimizatiable than a straight up get,
-as all our regular optimizations will apply, and less prototypes will need traversal.
-
-## Potential Alternatives:
-
-It's possible we could choose to try to fix this for only WebIDL, by specifying the something about how
-resolving a WebIDL dictionary works. Personally I would start at the language tho.
+This could change the order in which microtasks get resolved when 'thenables' are involved. The hope
+is that the majority of code dealing with promises is already relatively robust to execution
+order. However, it is certainly plausible this could cause a web compatibility problem.
 
 ## Prior Art & Related Work
 
@@ -120,7 +98,7 @@ resolving a WebIDL dictionary works. Personally I would start at the language th
   operations"
 - [Proposal Stabilize](https://github.com/Agoric/proposal-stabilize/) is trying to
   provide generalizable machineries for invariants -- this could be more of
-  an invariant we could provide to user code as well. 
+  an invariant we could provide to user code as well.
 
 ## Proposal History
 - [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) -- Achieved Stage 1. [(Notes)](https://github.com/tc39/notes/blob/main/meetings/2025-02/february-18.md#curtailing-the-power-of-thenables-for-stage-1)
