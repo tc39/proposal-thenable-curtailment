@@ -90,6 +90,33 @@ This could change the order in which microtasks get resolved when 'thenables' ar
 is that the majority of code dealing with promises is already relatively robust to execution
 order. However, it is certainly plausible this could cause a web compatibility problem.
 
+## Experiment: WebIDL
+
+Q: Can we use a `MaybeDeferredPromiseResolve` to replace [the promise resolution steps in WebIDL](https://webidl.spec.whatwg.org/#a-promise-resolved-with)?
+
+Experiment: Run WPT with the Firefox DOM Promise resolve steps replaced with MaybeDeferredPromiseResolve[^1].
+
+### Results:
+
+The vast majority of tests (as expected) pass.
+
+#### Timeout Failures:
+
+1. [https://searchfox.org/firefox-main/source/testing/web-platform/tests/css/css-overflow/scroll-marker-in-display-none-column-crash.html](https://searchfox.org/firefox-main/source/testing/web-platform/tests/css/css-overflow/scroll-marker-in-display-none-column-crash.html)  -- I didn't quite figure this one out.
+2. [/custom-elements/when-defined-reentry-crash.html](https://searchfox.org/firefox-main/source/testing/web-platform/tests/custom-elements/when-defined-reentry-crash.html) \-- this one is using a `then` on Object.prototype for nefarious aims. In a sense this is exactly the kind of issue we’re trying to address. [https://issues.chromium.org/issues/40061097](https://issues.chromium.org/issues/40061097)
+
+#### Unexpected Pass:
+
+1. [/fetch/api/response/response-body-read-task-handling.html](https://searchfox.org/firefox-main/source/testing/web-platform/tests/fetch/api/response/response-body-read-task-handling.html) \- This test is using `then` to get insight into execution order. The test no longer tests what it thinks it is testing anymore; however the test \-also- was created to address [this kind of thennable issue](https://bugzilla.mozilla.org/show_bug.cgi?id=1612308).
+
+#### Test Failures
+
+1. [/streams/readable-byte-streams/patched-global.any.js](https://searchfox.org/firefox-main/source/testing/web-platform/tests/streams/readable-byte-streams/patched-global.any.js) \-- Explicitly using `then` to peek into execution state we’d probably prefer to not be observable.  
+2. `/document-picture-in-picture/returns-window-with-document.https.html | requestWindow timing - assert\_equals: Got the expected order of actions expected "requestWindow,microtask,enter" but got "microtask,requestWindow,enter"` \-- The job timing changes because it’s resolving a promise with a `window` (WindowProxy) object, which causes an extra tick.  
+3. [/web-animations/interfaces/Animation/cancel.html](https://searchfox.org/firefox-main/source/testing/web-platform/tests/web-animations/interfaces/Animation/cancel.html#69-78); observing event timing with thenable.
+
+[^1]:  This is slightly more broad than strictly doing WebIDL because I think there’s non IDL use of dom::Promise.
+
 ## Prior Art & Related Work
 
 - [`Symbol.thenable`](https://github.com/tc39/proposal-symbol-thenable) "Withdrawn;
