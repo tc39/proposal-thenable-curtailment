@@ -38,7 +38,7 @@ contributors: Matthew Gaudet
       1. Return *false*.
     </emu-alg>
     <emu-note>
-      <p>I've sketched this asuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this</p>
+      <p>I've sketched this assuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this</p>
     </emu-note>
   </emu-clause>
 
@@ -85,7 +85,7 @@ contributors: Matthew Gaudet
       1. Return ? PromiseResolve(_promise_, _resolution_).
     </emu-alg>
     <emu-note>
-      <p>~deffered~ is a new state that I've not run through the rest of the spec, but the intention is that it prevents future resolutions from overriding the resolution applied here. </p>
+      <p>~deferred~ is a new state that I've not run through the rest of the spec, but the intention is that it prevents future resolutions from overriding the resolution applied here. </p>
     </emu-note>
   </emu-clause>
 </emu-clause>
