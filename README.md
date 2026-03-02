@@ -2,7 +2,9 @@
 
 **Champion**: Matthew Gaudet (Mozilla)
 
-**Stage**: 1 (As of February Plenary) 
+**Stage**: 1 (As of February Plenary)
+
+**Draft Spec Text**: https://tc39.es/proposal-thenable-curtailment/
 
 ## Introduction & Problem:
 
