@@ -32,7 +32,6 @@ contributors: Matthew Gaudet
         1. Let _desc_ be _o_.[[GetOwnProperty]](*"then"*).
         1. If _desc_ is not *undefined* and IsAccessorDescriptor(_desc_) is *true*, return *true*.
         1. Set _o_ to _o_.[[GetPrototypeOf]]().
-      1. If _desc_.[[Value]] is not *undefined*, return *true*.
       1. Let _constructorDesc_ be ? _value_.[[GetOwnProperty]](*"constructor"*).
       1. If _constructorDesc_ is not *undefined*, then
         1. If IsAccessorDescriptor(_constructorDesc_) is *true*, return *true*.
