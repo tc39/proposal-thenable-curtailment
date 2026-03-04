@@ -46,6 +46,7 @@ of an impression that this is perfection, done, or even entirely thought through
     </emu-alg>
     <emu-note>
       <p>I've sketched this assuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this</p>
+      <p>Also, the lookup of *"constructor"* needs also to be a loop of similar shape to the lookup for 'then'</p>
     </emu-note>
   </emu-clause>
 
