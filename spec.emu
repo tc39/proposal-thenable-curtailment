@@ -1,6 +1,8 @@
 <!doctype html>
 <meta charset="utf8">
-<link rel="stylesheet" href="./spec.css">
+<style>
+* { font-family: 'Comic Sans MS', 'Comic Sans', cursive !important; }
+</style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
@@ -8,6 +10,11 @@ title: MaybeDeferredResolvePromise (name TBD)
 stage: 1
 contributors: Matthew Gaudet
 </pre>
+
+<emu-note>
+You'll notice the spec looks a bit 'playful' -- this is because I don't want to give too much
+of an impression that this is perfection, done, or even entirely thought through deeply. This spec text is a sketch, intended for discussion not implementation.
+</emu-note>
 
 <emu-clause id="sec-safe-resolve-promise">
   <h1>MaybeDeferredPromiseResolve Abstract Operations</h1>
