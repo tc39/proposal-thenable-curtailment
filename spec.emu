@@ -49,6 +49,22 @@ of an impression that this is perfection, done, or even entirely thought through
     </emu-note>
   </emu-clause>
 
+    <emu-clause id="sec-draw-the-rest-of-the-owl" type="abstract operation">
+    <h1>
+      DoTheRestOfThePromiseResolveStuffWithoutAccidentallyCreatingAnotherJob (
+        _promiseToResolve_: a Promise,
+        _resolution_: an ECMAScript language value,
+      )
+    </h1>
+    <dl class="header">
+      <dt>description</dt>
+      <dd>Basically a nicely layered version of PromiseResolve that doesn't accidentally force another tick.</dd>
+    </dl>
+    <emu-alg>
+      1. Do ? PromiseResolve(_promiseToResolve_, _resolution_), but without accidentally introducing another tick.
+    </emu-alg>
+  </emu-clause>
+
   <emu-clause id="sec-new-deferred-safe-resolve-job" type="abstract operation">
     <h1>
       NewDeferredSafeResolveJob (
@@ -63,7 +79,7 @@ of an impression that this is perfection, done, or even entirely thought through
     </dl>
     <emu-alg>
       1. Let _job_ be a new Job Abstract Closure with no parameters that captures _promiseToResolve_ and _resolution_ and performs the following steps when called:
-        1. Return ? PromiseResolve(_promiseToResolve_, _resolution_).
+        1. Return ? DoTheRestOfThePromiseResolveStuffWithoutAccidentallyCreatingAnotherJob(_promiseToResolve_, _resolution_).
       1. Return the Record { [[Job]]: _job_, [[Realm]]: _realm_ }.
     </emu-alg>
   </emu-clause>
