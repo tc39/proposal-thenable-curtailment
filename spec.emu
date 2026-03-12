@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf8">
 <style>
-* { font-family: 'Comic Sans MS', 'Comic Sans', cursive !important; }
+* { font-family: 'Comic Sans MS', 'Comic Sans', sans-serif !important; }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
