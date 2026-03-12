@@ -2,7 +2,7 @@
 
 **Champion**: Matthew Gaudet (Mozilla)
 
-**Stage**: 1 (As of February Plenary)
+**Stage**: 2 (As of March 2026 Plenary)
 
 **Draft Spec Text**: https://tc39.es/proposal-thenable-curtailment/
 
@@ -132,3 +132,4 @@ The vast majority of tests (as expected) pass.
 ## Proposal History
 - [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) -- Achieved Stage 1. [(Notes)](https://github.com/tc39/notes/blob/main/meetings/2025-02/february-18.md#curtailing-the-power-of-thenables-for-stage-1)
 - [Presented at July 2025 Plenary](https://docs.google.com/presentation/d/1_RCnI7dzyA1COgi_Ib7GkmHioV1nVSEMmZvy0bvJ8Kk/edit?slide=id.p#slide=id.p). ([Notes](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-29.md#how-to-make-thenables-safer) & [Notes from Continuation](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-30.md#continuation-how-to-make-thenables-safer))
+- [Presented at March 2026 Plenary](https://docs.google.com/presentation/d/1i0jY_e-A3rkd9256VzirJdPVtHInYNGjtYq_KrTBMuo/edit?slide=id.g3cc3e467680_0_80#slide=id.g3cc3e467680_0_80) 
