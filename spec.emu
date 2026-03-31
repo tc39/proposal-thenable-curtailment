@@ -17,33 +17,46 @@ This spec text is not reviewed yet and may have issues.
 
   <p>These operations provide a mechanism for resolving promises without risk of synchronously executing arbitrary user code. When the resolution value is an object that could trigger user code (such as a Proxy, a thenable, or an object with accessor properties), the actual resolution is deferred to a future job.</p>
 
+  <emu-clause id="sec-get-property-unless-can-run-user-code" type="abstract operation">
+    <h1>
+      HasPropertyWhichCouldRunUserCode (
+        _o_: an Object,
+        _propertyKey_: a property key,
+      ): a Boolean
+    </h1>
+    <dl class="header">
+      <dt>description</dt>
+      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code (i.e. it is an accessor or encountered on a Proxy).</dd>
+    </dl>
+    <emu-alg>
+      1. While _o_ is not *undefined*, repeat:
+        1. If _o_ has a [[ProxyHandler]] internal slot, return *true*.
+        1. Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).
+        1. If _desc_ is not *undefined* return IsAccessorDescriptor(_desc_).
+        1. Set _o_ to _o_.[[GetPrototypeOf]]().
+      1. Return *false*.
+    </emu-alg>
+    <emu-note>
+      <p>I've sketched this assuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this. It's also worth noting that this roughly matches up with LookupOwnPropertyPure in SpiderMonkey.</p>
+    </emu-note>
+  </emu-clause>
+
   <emu-clause id="sec-requires-deferred-promise-resolution" type="abstract operation">
     <h1>
       RequiresDeferredPromiseResolution (
         _value_: an ECMAScript language value,
-      ): either a normal completion containing a Boolean or a throw completion
+      ): a Boolean
     </h1>
     <dl class="header">
       <dt>description</dt>
       <dd>It determines whether resolving a promise with _value_ might execute user code that should be deferred to avoid running user code</dd>
     </dl>
     <emu-alg>
-      1. Let _o_ be _value_.
-      1. While _o_ is defined, Repeat:
-        1. If _value_ is not an Object, return *false*.
-        1. If _value_ has a [[ProxyHandler]] internal slot, return *true*.
-        1. Let _desc_ be _o_.[[GetOwnProperty]](*"then"*).
-        1. If _desc_ is not *undefined* and IsAccessorDescriptor(_desc_) is *true*, return *true*.
-        1. Set _o_ to _o_.[[GetPrototypeOf]]().
-      1. Let _constructorDesc_ be ? _value_.[[GetOwnProperty]](*"constructor"*).
-      1. If _constructorDesc_ is not *undefined*, then
-        1. If IsAccessorDescriptor(_constructorDesc_) is *true*, return *true*.
+      1. If _value_ is not an Object, return *false*.
+      1. If HasPropertyWhichCouldRunUserCode(_value_, *"then"*) is *true*, return *true*.
+      1. If HasPropertyWhichCouldRunUserCode(_value_, *"constructor"*) is *true*, return *true*.
       1. Return *false*.
     </emu-alg>
-    <emu-note>
-      <p>I've sketched this assuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this</p>
-      <p>Also, the lookup of *"constructor"* needs also to be a loop of similar shape to the lookup for 'then'</p>
-    </emu-note>
   </emu-clause>
 
     <emu-clause id="sec-draw-the-rest-of-the-owl" type="abstract operation">
@@ -95,7 +108,7 @@ This spec text is not reviewed yet and may have issues.
     <emu-alg>
       1. Assert: _promise_ is a Promise.
       1. Assert: _promise_.[[PromiseState]] is ~pending~.
-      1. Let _requiresDeferred_ be ? RequiresDeferredPromiseResolution(_resolution_).
+      1. Let _requiresDeferred_ be RequiresDeferredPromiseResolution(_resolution_).
       1. If _requiresDeferred_ is *true*, then
         1. Set _promise_.[[PromiseState]] to ~deferred~.
         1. Let _callerRealm_ be the current Realm Record.
