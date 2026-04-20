@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
-title: MaybeDeferredResolvePromise (name TBD)
+title: MaybeDeferredPromiseResolve (name TBD)
 stage: 1
 contributors: Matthew Gaudet
 </pre>
@@ -15,9 +15,23 @@ This spec text is not reviewed yet and may have issues.
 <emu-clause id="sec-safe-resolve-promise">
   <h1>MaybeDeferredPromiseResolve Abstract Operations</h1>
 
-  <p>These operations provide a mechanism for resolving promises without risk of synchronously executing arbitrary user code. When the resolution value is an object that could trigger user code (such as a Proxy, a thenable, or an object with accessor properties), the actual resolution is deferred to a future job.</p>
+  <p>These operations provide a mechanism for resolving a promise such that, if resolution would synchronously execute arbitrary user code, the user-code-running portion is deferred to a subsequent microtask. On return from MaybeDeferredPromiseResolve, the caller's PromiseCapability Record is guaranteed to be latched: any subsequent call to its [[Resolve]] or [[Reject]] is a no-op, regardless of whether the deferred job has yet run.</p>
 
-  <emu-clause id="sec-get-property-unless-can-run-user-code" type="abstract operation">
+  <emu-clause id="sec-isgetterdescriptor" type="abstract operation">
+    <h1>
+      IsGetterDescriptor (
+        _Desc_: a Property Descriptor,
+      ): a Boolean
+    </h1>
+    <dl class="header">
+    </dl>
+    <emu-alg>
+      1. If _Desc_ has a [[Get]] field, return *true*.
+      1. Return *false*.
+    </emu-alg>
+  </emu-clause>
+
+  <emu-clause id="sec-has-property-which-could-run-user-code" type="abstract operation">
     <h1>
       HasPropertyWhichCouldRunUserCode (
         _o_: an Object,
@@ -26,18 +40,18 @@ This spec text is not reviewed yet and may have issues.
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code (i.e. it is an accessor or encountered on a Proxy).</dd>
+      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code: that is, the property is a getter, or a Proxy is encountered on the chain.</dd>
     </dl>
     <emu-alg>
-      1. While _o_ is not *undefined*, repeat:
+      1. Repeat, while _o_ is not *null*,
         1. If _o_ has a [[ProxyHandler]] internal slot, return *true*.
         1. Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).
-        1. If _desc_ is not *undefined* return IsAccessorDescriptor(_desc_).
+        1. If _desc_ is not *undefined*, return IsGetterDescriptor(_desc_).
         1. Set _o_ to _o_.[[GetPrototypeOf]]().
       1. Return *false*.
     </emu-alg>
     <emu-note>
-      <p>I've sketched this assuming that [[GetPrototypeOf]] cannot trap on a getter, but I'm not 100% sure of this. It's also worth noting that this roughly matches up with LookupOwnPropertyPure in SpiderMonkey.</p>
+      <p>This relies on ordinary [[GetPrototypeOf]] never running user code. A Proxy is handled by short-circuiting with *true* before any of its MOP is invoked. Roughly corresponds to SpiderMonkey's LookupOwnPropertyPure.</p>
     </emu-note>
   </emu-clause>
 
@@ -49,76 +63,80 @@ This spec text is not reviewed yet and may have issues.
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>It determines whether resolving a promise with _value_ might execute user code that should be deferred to avoid running user code</dd>
+      <dd>It determines whether the synchronous steps of resolving a promise with _value_ might execute user code.</dd>
     </dl>
     <emu-alg>
       1. If _value_ is not an Object, return *false*.
       1. If HasPropertyWhichCouldRunUserCode(_value_, *"then"*) is *true*, return *true*.
-      1. If HasPropertyWhichCouldRunUserCode(_value_, *"constructor"*) is *true*, return *true*.
+      1. Let _thenValue_ be ! _value_.[[Get]](*"then"*).
+      1. If IsCallable(_thenValue_) is *true*, return *true*.
       1. Return *false*.
     </emu-alg>
   </emu-clause>
 
-    <emu-clause id="sec-draw-the-rest-of-the-owl" type="abstract operation">
+  <emu-clause id="sec-perform-promise-resolution" type="abstract operation">
     <h1>
-      DoTheRestOfThePromiseResolveStuffWithoutAccidentallyCreatingAnotherJob (
-        _promiseToResolve_: a Promise,
+      PerformPromiseResolution (
+        _promise_: a Promise,
         _resolution_: an ECMAScript language value,
-      )
+      ): ~unused~
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>Basically a nicely layered version of PromiseResolve that doesn't accidentally force another tick.</dd>
+      <dd>It performs the value-inspecting steps of resolving _promise_ with _resolution_.</dd>
     </dl>
     <emu-alg>
-      1. Do ? PromiseResolve(_promiseToResolve_, _resolution_), but without accidentally introducing another tick.
+      1. If SameValue(_resolution_, _promise_) is *true*, then
+        1. Let _selfResolutionError_ be a newly created *TypeError* object.
+        1. Perform RejectPromise(_promise_, _selfResolutionError_).
+        1. Return ~unused~.
+      1. If _resolution_ is not an Object, then
+        1. Perform FulfillPromise(_promise_, _resolution_).
+        1. Return ~unused~.
+      1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
+      1. If _then_ is an abrupt completion, then
+        1. Perform RejectPromise(_promise_, _then_.[[Value]]).
+        1. Return ~unused~.
+      1. Let _thenAction_ be _then_.[[Value]].
+      1. If IsCallable(_thenAction_) is *false*, then
+        1. Perform FulfillPromise(_promise_, _resolution_).
+        1. Return ~unused~.
+      1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
+      1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
+      1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
+      1. Return ~unused~.
     </emu-alg>
+    <emu-note>
+      <p>This overlaps heavily with the Abstract Closure inside CreateResolvingFunctions. Later work could resolve this duplication</p>
+    </emu-note>
   </emu-clause>
 
-  <emu-clause id="sec-new-deferred-safe-resolve-job" type="abstract operation">
-    <h1>
-      NewDeferredSafeResolveJob (
-        _promiseToResolve_: a Promise,
-        _resolution_: an ECMAScript language value,
-        _realm_: a Realm Record,
-      ): a Record with fields [[Job]] (a Job Abstract Closure) and [[Realm]] (a Realm Record)
-    </h1>
-    <dl class="header">
-      <dt>description</dt>
-      <dd>It returns a Job that performs deferred promise resolution in a microtask.</dd>
-    </dl>
-    <emu-alg>
-      1. Let _job_ be a new Job Abstract Closure with no parameters that captures _promiseToResolve_ and _resolution_ and performs the following steps when called:
-        1. Return ? DoTheRestOfThePromiseResolveStuffWithoutAccidentallyCreatingAnotherJob(_promiseToResolve_, _resolution_).
-      1. Return the Record { [[Job]]: _job_, [[Realm]]: _realm_ }.
-    </emu-alg>
-  </emu-clause>
-
-  <emu-clause id="sec-safe-resolve-promise-operation" type="abstract operation">
+  <emu-clause id="sec-maybe-deferred-promise-resolve" type="abstract operation">
     <h1>
       MaybeDeferredPromiseResolve (
-        _promise_: a Promise,
+        _promiseCapability_: a PromiseCapability Record,
         _resolution_: an ECMAScript language value,
       ): either a normal completion containing *undefined* or a throw completion
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>It resolves _promise_ with _resolution_, deferring to a microtask if _resolution_ might execute user code.</dd>
+      <dd>It resolves _promiseCapability_.[[Promise]] with _resolution_, deferring the user-code-running steps to a subsequent microtask if _resolution_ might execute user code synchronously. In either branch, _promiseCapability_'s resolving functions are latched on return.</dd>
     </dl>
     <emu-alg>
-      1. Assert: _promise_ is a Promise.
-      1. Assert: _promise_.[[PromiseState]] is ~pending~.
-      1. Let _requiresDeferred_ be RequiresDeferredPromiseResolution(_resolution_).
-      1. If _requiresDeferred_ is *true*, then
-        1. Set _promise_.[[PromiseState]] to ~deferred~.
-        1. Let _callerRealm_ be the current Realm Record.
-        1. Let _job_ be NewDeferredSafeResolveJob(_promise_, _resolution_, _callerRealm_).
-        1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
+      1. If RequiresDeferredPromiseResolution(_resolution_) is *false*, then
+        1. Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).
+      1. Let _promise_ be _promiseCapability_.[[Promise]].
+      1. Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:
+        1. Perform PerformPromiseResolution(_promise_, _resolution_).
         1. Return *undefined*.
-      1. Return ? PromiseResolve(_promise_, _resolution_).
+      1. Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).
+      1. Let _wrapper_ be OrdinaryObjectCreate(*null*).
+      1. Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).
+      1. Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _wrapper_ »).
     </emu-alg>
     <emu-note>
-      <p>~deferred~ is a new state that I've not run through the rest of the spec, but the intention is that it prevents future resolutions from overriding the resolution applied here. </p>
+      <p>This idea is thanks to Justin Ridgewell who suggested the wrapper idea.</p>
+      <p>The wrapper object is never exposed to user code. It is constructed solely so that resolving _promise_ with it uses the existing thenable support for good rather than evil; we mark the promise as not eligible for overriding resolve, and a job is created for running the 'then' code.</p>
     </emu-note>
   </emu-clause>
 </emu-clause>
