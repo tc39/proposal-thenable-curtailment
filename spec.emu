@@ -111,6 +111,65 @@ This spec text is not reviewed yet and may have issues.
     </emu-note>
   </emu-clause>
 
+  <emu-clause id="sec-createresolvingfunctions-modified" type="abstract operation">
+    <h1>
+      CreateResolvingFunctions (
+        _toResolve_: a Promise,
+      ): a Record with fields [[Resolve]] (a function object) and [[Reject]] (a function object)
+    </h1>
+    <dl class="header">
+      <dt>description</dt>
+      <dd>This is a modification of the existing <emu-xref href="#sec-createresolvingfunctions">CreateResolvingFunctions</emu-xref>. The resolve function takes an additional parameter _doSafeResolve_; when *true*, and _resolution_ would synchronously execute user code, the user-code-running steps are deferred via a null-prototype wrapper thenable.</dd>
+    </dl>
+    <emu-alg>
+      1. Let _promiseOrEmpty_ be the Record { [[Value]]: _toResolve_ }.
+      1. Let _resolveSteps_ be a new Abstract Closure with parameters (_resolution_<ins>, _doSafeResolve_</ins>) that captures _promiseOrEmpty_ and performs the following steps when called:
+        1. If _promiseOrEmpty_.[[Value]] is ~empty~, return *undefined*.
+        1. Let _promise_ be _promiseOrEmpty_.[[Value]].
+        1. Set _promiseOrEmpty_.[[Value]] to ~empty~.
+        1. <ins>If _doSafeResolve_ is *true* and RequiresDeferredPromiseResolution(_resolution_) is *true*, then</ins>
+          1. <ins>Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:</ins>
+            1. <ins>Perform PerformPromiseResolution(_promise_, _resolution_).</ins>
+            1. <ins>Return *undefined*.</ins>
+          1. <ins>Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).</ins>
+          1. <ins>Let _wrapper_ be OrdinaryObjectCreate(*null*).</ins>
+          1. <ins>Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).</ins>
+          1. <ins>Set _resolution_ to _wrapper_.</ins>
+        1. If SameValue(_resolution_, _promise_) is *true*, then
+          1. Let _selfResolutionError_ be a newly created *TypeError* object.
+          1. Perform RejectPromise(_promise_, _selfResolutionError_).
+          1. Return *undefined*.
+        1. If _resolution_ is not an Object, then
+          1. Perform FulfillPromise(_promise_, _resolution_).
+          1. Return *undefined*.
+        1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
+        1. If _then_ is an abrupt completion, then
+          1. Perform RejectPromise(_promise_, _then_.[[Value]]).
+          1. Return *undefined*.
+        1. Let _thenAction_ be _then_.[[Value]].
+        1. If IsCallable(_thenAction_) is *false*, then
+          1. Perform FulfillPromise(_promise_, _resolution_).
+          1. Return *undefined*.
+        1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
+        1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
+        1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
+        1. Return *undefined*.
+      1. Let _resolve_ be CreateBuiltinFunction(_resolveSteps_, <del>1</del><ins>2</ins>, *""*, « »).
+      1. Let _rejectSteps_ be a new Abstract Closure with parameters (_reason_) that captures _promiseOrEmpty_ and performs the following steps when called:
+        1. If _promiseOrEmpty_.[[Value]] is ~empty~, return *undefined*.
+        1. Let _promise_ be _promiseOrEmpty_.[[Value]].
+        1. Set _promiseOrEmpty_.[[Value]] to ~empty~.
+        1. Perform RejectPromise(_promise_, _reason_).
+        1. Return *undefined*.
+      1. Let _reject_ be CreateBuiltinFunction(_rejectSteps_, 1, *""*, « »).
+      1. Return the Record { [[Resolve]]: _resolve_, [[Reject]]: _reject_ }.
+    </emu-alg>
+    <emu-note>
+      <p>When _doSafeResolve_ is *false* (or omitted by an external caller invoking the built-in as a normal function), the behaviour is identical to the current CreateResolvingFunctions: _resolution_ is not inspected for user-code hazards. Internal callers that want the deferred behaviour pass *true*.</p>
+      <p>Latching of _promiseOrEmpty_ happens before the deferral branch, so the resolving functions are no-ops on any subsequent call, regardless of whether the deferred job has yet run.</p>
+    </emu-note>
+  </emu-clause>
+
   <emu-clause id="sec-maybe-deferred-promise-resolve" type="abstract operation">
     <h1>
       MaybeDeferredPromiseResolve (
