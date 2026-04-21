@@ -86,12 +86,12 @@ This spec text is not reviewed yet and may have issues.
       <dd>It performs the value-inspecting steps of resolving _promise_ with _resolution_.</dd>
     </dl>
     <emu-alg>
+      1. If _resolution_ is not an Object, then
+        1. Perform FulfillPromise(_promise_, _resolution_).
+        1. Return ~unused~.
       1. If SameValue(_resolution_, _promise_) is *true*, then
         1. Let _selfResolutionError_ be a newly created *TypeError* object.
         1. Perform RejectPromise(_promise_, _selfResolutionError_).
-        1. Return ~unused~.
-      1. If _resolution_ is not an Object, then
-        1. Perform FulfillPromise(_promise_, _resolution_).
         1. Return ~unused~.
       1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
       1. If _then_ is an abrupt completion, then
