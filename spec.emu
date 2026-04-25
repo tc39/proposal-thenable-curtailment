@@ -80,7 +80,7 @@ This spec text is not reviewed yet and may have issues.
         _promise_: a Promise,
         _resolution_: an ECMAScript language value,
         _called_: ~sync~ or ~deferred~,
-      ): *undefined*
+      ): either a normal completion containing *undefined* or an abrupt completion
     </h1>
     <dl class="header">
       <dt>description</dt>
@@ -104,7 +104,7 @@ This spec text is not reviewed yet and may have issues.
         1. Perform FulfillPromise(_promise_, _resolution_).
         1. Return *undefined*.
       1. <ins>If _called_ is ~deferred~, then</ins>
-        1. <ins>Perform PerformPromiseResolveThenable(_promise_, _resolution_, _thenAction_).</ins>
+        1. <ins>Perform ? PerformPromiseResolveThenable(_promise_, _resolution_, _thenAction_).</ins>
         1. <ins>Return *undefined*.</ins>
       1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
       1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
@@ -182,12 +182,12 @@ This spec text is not reviewed yet and may have issues.
         1. Set _promiseOrEmpty_.[[Value]] to ~empty~.
         1. <ins>If _doSafeResolve_ is *true* and RequiresDeferredPromiseResolution(_resolution_) is *true*, then</ins>
           1. <ins>Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:</ins>
-            1. <ins>Return PerformPromiseResolution(_promise_, _resolution_, ~deferred~).</ins>
+            1. <ins>Return ? PerformPromiseResolution(_promise_, _resolution_, ~deferred~).</ins>
           1. <ins>Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).</ins>
           1. <ins>Let _wrapper_ be OrdinaryObjectCreate(*null*).</ins>
           1. <ins>Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).</ins>
           1. <ins>Set _resolution_ to _wrapper_.</ins>
-        1. <ins>Return PerformPromiseResolution(_promise_, _resolution_, ~sync~).</ins>
+        1. <ins>Perform ? PerformPromiseResolution(_promise_, _resolution_, ~sync~).</ins>
         1. <del>If SameValue(_resolution_, _promise_) is *true*, then</del>
           1. <del>Let _selfResolutionError_ be a newly created *TypeError* object.</del>
           1. <del>Perform RejectPromise(_promise_, _selfResolutionError_).</del>
@@ -206,7 +206,7 @@ This spec text is not reviewed yet and may have issues.
         1. <del>Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).</del>
         1. <del>Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).</del>
         1. <del>Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).</del>
-        1. <del>Return *undefined*.</del>
+        1. Return *undefined*.
       1. Let _resolve_ be CreateBuiltinFunction(_resolveSteps_, <del>1</del><ins>2</ins>, *""*, « »).
       1. Let _rejectSteps_ be a new Abstract Closure with parameters (_reason_) that captures _promiseOrEmpty_ and performs the following steps when called:
         1. If _promiseOrEmpty_.[[Value]] is ~empty~, return *undefined*.
@@ -239,7 +239,7 @@ This spec text is not reviewed yet and may have issues.
         1. Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).
       1. Let _promise_ be _promiseCapability_.[[Promise]].
       1. Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:
-        1. Perform PerformPromiseResolution(_promise_, _resolution_, ~deferred~).
+        1. Perform ? PerformPromiseResolution(_promise_, _resolution_, ~deferred~).
         1. Return *undefined*.
       1. Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).
       1. Let _wrapper_ be OrdinaryObjectCreate(*null*).
