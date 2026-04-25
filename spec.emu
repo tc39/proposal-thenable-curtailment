@@ -3,9 +3,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
-title: MaybeDeferredPromiseResolve (name TBD)
+title: SafelyResolvePromise (name TBD)
 stage: 1
-contributors: Matthew Gaudet
+contributors: Matthew Gaudet, Justin Ridgewell
 </pre>
 
 <emu-note>
@@ -13,9 +13,9 @@ This spec text is not reviewed yet and may have issues.
 </emu-note>
 
 <emu-clause id="sec-safe-resolve-promise">
-  <h1>MaybeDeferredPromiseResolve Abstract Operations</h1>
+  <h1>SafelyResolvePromise Abstract Operations</h1>
 
-  <p>These operations provide a mechanism for resolving a promise such that, if resolution would synchronously execute arbitrary user code, the user-code-running portion is deferred to a subsequent microtask. On return from MaybeDeferredPromiseResolve, the caller's PromiseCapability Record is guaranteed to be latched: any subsequent call to its [[Resolve]] or [[Reject]] is a no-op, regardless of whether the deferred job has yet run.</p>
+  <p>These operations provide a mechanism for resolving a promise such that, if resolution would synchronously execute arbitrary user code, the user-code-running portion is deferred to a subsequent microtask. On return from SafelyResolvePromise, the caller's PromiseCapability Record is guaranteed to be latched: any subsequent call to its [[Resolve]] or [[Reject]] is a no-op, regardless of whether the deferred job has yet run.</p>
 
   <emu-clause id="sec-isgetterdescriptor" type="abstract operation">
     <h1>
@@ -74,43 +74,6 @@ This spec text is not reviewed yet and may have issues.
     </emu-alg>
   </emu-clause>
 
-  <emu-clause id="sec-perform-promise-resolution" type="abstract operation">
-    <h1>
-      PerformPromiseResolution (
-        _promise_: a Promise,
-        _resolution_: an ECMAScript language value,
-      ): ~unused~
-    </h1>
-    <dl class="header">
-      <dt>description</dt>
-      <dd>It performs the value-inspecting steps of resolving _promise_ with _resolution_.</dd>
-    </dl>
-    <emu-alg>
-      1. If _resolution_ is not an Object, then
-        1. Perform FulfillPromise(_promise_, _resolution_).
-        1. Return ~unused~.
-      1. If SameValue(_resolution_, _promise_) is *true*, then
-        1. Let _selfResolutionError_ be a newly created *TypeError* object.
-        1. Perform RejectPromise(_promise_, _selfResolutionError_).
-        1. Return ~unused~.
-      1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
-      1. If _then_ is an abrupt completion, then
-        1. Perform RejectPromise(_promise_, _then_.[[Value]]).
-        1. Return ~unused~.
-      1. Let _thenAction_ be _then_.[[Value]].
-      1. If IsCallable(_thenAction_) is *false*, then
-        1. Perform FulfillPromise(_promise_, _resolution_).
-        1. Return ~unused~.
-      1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
-      1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
-      1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
-      1. Return ~unused~.
-    </emu-alg>
-    <emu-note>
-      <p>This overlaps heavily with the Abstract Closure inside CreateResolvingFunctions. Later work could resolve this duplication</p>
-    </emu-note>
-  </emu-clause>
-
   <emu-clause id="sec-createresolvingfunctions-modified" type="abstract operation">
     <h1>
       CreateResolvingFunctions (
@@ -123,25 +86,25 @@ This spec text is not reviewed yet and may have issues.
     </dl>
     <emu-alg>
       1. Let _promiseOrEmpty_ be the Record { [[Value]]: _toResolve_ }.
-      1. Let _resolveSteps_ be a new Abstract Closure with parameters (_resolution_<ins>, _doSafeResolve_</ins>) that captures _promiseOrEmpty_ and performs the following steps when called:
+      1. Let _resolveSteps_ be a new Abstract Closure with parameters (_resolution_) that captures _promiseOrEmpty_ and performs the following steps when called:
         1. If _promiseOrEmpty_.[[Value]] is ~empty~, return *undefined*.
         1. Let _promise_ be _promiseOrEmpty_.[[Value]].
         1. Set _promiseOrEmpty_.[[Value]] to ~empty~.
-        1. <ins>If _doSafeResolve_ is *true* and RequiresDeferredPromiseResolution(_resolution_) is *true*, then</ins>
-          1. <ins>Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:</ins>
-            1. <ins>Perform PerformPromiseResolution(_promise_, _resolution_).</ins>
-            1. <ins>Return *undefined*.</ins>
-          1. <ins>Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).</ins>
-          1. <ins>Let _wrapper_ be OrdinaryObjectCreate(*null*).</ins>
-          1. <ins>Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).</ins>
-          1. <ins>Set _resolution_ to _wrapper_.</ins>
-        1. If SameValue(_resolution_, _promise_) is *true*, then
-          1. Let _selfResolutionError_ be a newly created *TypeError* object.
-          1. Perform RejectPromise(_promise_, _selfResolutionError_).
-          1. Return *undefined*.
+        1. <del>If SameValue(_resolution_, _promise_) is *true*, then</del>
+          1. <del>Let _selfResolutionError_ be a newly created *TypeError* object.</del>
+          1. <del>Perform RejectPromise(_promise_, _selfResolutionError_).</del>
+          1. <del>Return *undefined*.</del>
         1. If _resolution_ is not an Object, then
           1. Perform FulfillPromise(_promise_, _resolution_).
           1. Return *undefined*.
+        1. <ins>Let _safeDeferred_ be *false*.</ins>
+        1. <ins>If _resolution_ has a [[SafeDeferred]] field, then</ins>
+          1. <ins>Set _safeDeferred_ to *true*.</ins>
+          1. <ins>Set _resolution_ to _resolution_.[[SafeDeferred]].</ins>
+        1. <ins>If SameValue(_resolution_, _promise_) is *true*, then</ins>
+          1. <ins>Let _selfResolutionError_ be a newly created *TypeError* object.</ins>
+          1. <ins>Perform RejectPromise(_promise_, _selfResolutionError_).</ins>
+          1. <ins>Return *undefined*.</ins>
         1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
         1. If _then_ is an abrupt completion, then
           1. Perform RejectPromise(_promise_, _then_.[[Value]]).
@@ -150,11 +113,14 @@ This spec text is not reviewed yet and may have issues.
         1. If IsCallable(_thenAction_) is *false*, then
           1. Perform FulfillPromise(_promise_, _resolution_).
           1. Return *undefined*.
+        1. <ins>If _safeDeferred_ is *true*, then</ins>
+          1. <ins>Perform PerformPromiseResolveThenable(_promise_, _resolution_, _thenAction_).</ins>
+          1. <ins>Return *undefined*.</ins>
         1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
         1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
         1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
         1. Return *undefined*.
-      1. Let _resolve_ be CreateBuiltinFunction(_resolveSteps_, <del>1</del><ins>2</ins>, *""*, « »).
+      1. Let _resolve_ be CreateBuiltinFunction(_resolveSteps_, 1, *""*, « »).
       1. Let _rejectSteps_ be a new Abstract Closure with parameters (_reason_) that captures _promiseOrEmpty_ and performs the following steps when called:
         1. If _promiseOrEmpty_.[[Value]] is ~empty~, return *undefined*.
         1. Let _promise_ be _promiseOrEmpty_.[[Value]].
@@ -170,9 +136,55 @@ This spec text is not reviewed yet and may have issues.
     </emu-note>
   </emu-clause>
 
+  <emu-clause id="sec-newpromiseresolvethenablejob" type="abstract operation" oldids="sec-promiseresolvethenablejob">
+    <h1>
+      NewPromiseResolveThenableJob (
+        _promiseToResolve_: a Promise,
+        _thenable_: an Object,
+        _then_: a JobCallback Record,
+      ): a Record with fields [[Job]] (a Job Abstract Closure) and [[Realm]] (a Realm Record)
+    </h1>
+    <dl class="header">
+    </dl>
+    <emu-alg>
+      1. Let _job_ be a new Job Abstract Closure with no parameters that captures _promiseToResolve_, _thenable_, and _then_ and performs the following steps when called:
+        1. <ins>Return ? PerformPromiseResolveThenable(_promiseToResolve_, _thenable_, _then_).</ins>
+        1. <del>Let _resolvingFunctions_ be CreateResolvingFunctions(_promiseToResolve_).</del>
+        1. <del>Let _thenCallResult_ be Completion(HostCallJobCallback(_then_, _thenable_, « _resolvingFunctions_.[[Resolve]], _resolvingFunctions_.[[Reject]] »)).</del>
+        1. <del>If _thenCallResult_ is an abrupt completion, then</del>
+          1. <del>Return ? Call(_resolvingFunctions_.[[Reject]], *undefined*, « _thenCallResult_.[[Value]] »).</del>
+        1. <del>Return ! _thenCallResult_.</del>
+      1. Let _getThenRealmResult_ be Completion(GetFunctionRealm(_then_.[[Callback]])).
+      1. If _getThenRealmResult_ is a normal completion, let _thenRealm_ be _getThenRealmResult_.[[Value]].
+      1. Else, let _thenRealm_ be the current Realm Record.
+      1. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
+      1. Return the Record { [[Job]]: _job_, [[Realm]]: _thenRealm_ }.
+    </emu-alg>
+    <emu-note>
+      <p>This Job uses the supplied thenable and its `then` method to resolve the given promise. This process must take place as a Job to ensure that the evaluation of the `then` method occurs after evaluation of any surrounding code has completed.</p>
+    </emu-note>
+  </emu-clause>
+
+  <emu-clause id="sec-performpromiseresolvethenable" type="abstract operation">
+    <h1>
+      PerformPromiseResolveThenableJob (
+        _promiseToResolve_: a Promise,
+        _thenable_: an Object,
+        _then_: a JobCallback Record,
+      ): either a normal completion containing *undefined* or a throw completion
+    </h1>
+    <emu-alg>
+      1. Let _resolvingFunctions_ be CreateResolvingFunctions(_promiseToResolve_).
+      1. Let _thenCallResult_ be Completion(HostCallJobCallback(_then_, _thenable_, « _resolvingFunctions_.[[Resolve]], _resolvingFunctions_.[[Reject]] »)).
+      1. If _thenCallResult_ is an abrupt completion, then
+        1. Return ? Call(_resolvingFunctions_.[[Reject]], *undefined*, « _thenCallResult_.[[Value]] »).
+      1. Return ! _thenCallResult_.
+    </emu-alg>
+  </emu-clause>
+
   <emu-clause id="sec-maybe-deferred-promise-resolve" type="abstract operation">
     <h1>
-      MaybeDeferredPromiseResolve (
+      SafelyResolvePromise (
         _promiseCapability_: a PromiseCapability Record,
         _resolution_: an ECMAScript language value,
       ): either a normal completion containing *undefined* or a throw completion
@@ -185,9 +197,10 @@ This spec text is not reviewed yet and may have issues.
       1. If RequiresDeferredPromiseResolution(_resolution_) is *false*, then
         1. Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).
       1. Let _promise_ be _promiseCapability_.[[Promise]].
-      1. Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:
-        1. Perform PerformPromiseResolution(_promise_, _resolution_).
-        1. Return *undefined*.
+      1. Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that performs the following steps when called:
+        1. Let _safeDeferred_ be OrdinaryObjectCreate(*null*, « [[SafeDeferred]] »).
+        2. Set _safeDeferred_.[[SafeDeferred]] to _resolution_.
+        1. Return ? Call(_onFulfilled_, *undefined*, « _safeDeferred_ »)
       1. Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).
       1. Let _wrapper_ be OrdinaryObjectCreate(*null*).
       1. Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).
