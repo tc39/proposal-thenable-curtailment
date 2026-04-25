@@ -200,6 +200,10 @@ This spec text is not reviewed yet and may have issues.
       1. Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _resolution_ and performs the following steps when called:
         1. Let _safeDeferred_ be OrdinaryObjectCreate(*null*, « [[SafeDeferred]] »).
         1. Set _safeDeferred_.[[SafeDeferred]] to _resolution_.
+        1. Let _thenableSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _resolution_ and performs the following steps when called:
+          1. Return ? Call(_onFulfilled_, *undefined*, « _resolution_ »).
+        1. Let _then_ be CreateBuiltinFunction(_then_, 2, *""*, « »).
+        1. Perform ! CreateDataPropertyOrThrow(_safeDeferred_, *"then"*, _then_).
         1. Return ? Call(_onFulfilled_, *undefined*, « _safeDeferred_ »).
       1. Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).
       1. Let _wrapper_ be OrdinaryObjectCreate(*null*).
