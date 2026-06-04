@@ -4,8 +4,8 @@
 <script src="./spec.js"></script>
 <pre class="metadata">
 title: SafePromiseResolve
-stage: 1
-contributors: Matthew Gaudet
+stage: 2
+contributors: Matthew Gaudet, Justin Ridgewell
 </pre>
 
 <emu-clause id="sec-safe-resolve-promise">
@@ -107,9 +107,6 @@ contributors: Matthew Gaudet
       1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
       1. Return ~unused~.
     </emu-alg>
-    <emu-note>
-      <p>This overlaps heavily with the Abstract Closure inside CreateResolvingFunctions. Later work could resolve this duplication</p>
-    </emu-note>
   </emu-clause>
 
   <emu-clause id="sec-newpromiseresolvethenablejob" type="abstract operation" oldids="sec-promiseresolvethenablejob">
@@ -147,7 +144,7 @@ contributors: Matthew Gaudet
         _promiseToResolve_: a Promise,
         _thenable_: an Object,
         _then_: a JobCallback Record or a function object,
-      ): either a normal completion containing *undefined* or a throw completion
+      ): either a normal completion containing an ECMAScript language value or a throw completion
     </h1>
     <dl class="header">
     </dl>
@@ -175,7 +172,7 @@ contributors: Matthew Gaudet
     </dl>
     <emu-alg>
       1. Let _promiseOrEmpty_ be the Record { [[Value]]: _toResolve_ }.
-      1. Let _resolveSteps_ be a new Abstract Closure with parameters (_resolution_<ins>, _doSafeResolve_</ins>) that captures _promiseOrEmpty_ and performs the following steps when called:
+      1. Let _resolveSteps_ be a new Abstract Closure with parameters (_resolution_) that captures _promiseOrEmpty_ and performs the following steps when called:
         1. If _promiseOrEmpty_.[[Value]] is ~empty~, return *undefined*.
         1. Let _promise_ be _promiseOrEmpty_.[[Value]].
         1. Set _promiseOrEmpty_.[[Value]] to ~empty~.

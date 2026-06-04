@@ -28,7 +28,7 @@ unexpected.
 ## Why is this a problem?
 
 The most concrete one is security vulnerabilities. We must be ever-vigilant about
-this compatability supporting feature in all standard work, and throughout
+this compatibility supporting feature in all standard work, and throughout
 the web-platform. Failure to do so has the consequence of possible exploitation:
 
 - [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification.
@@ -37,9 +37,9 @@ the web-platform. Failure to do so has the consequence of possible exploitation:
 - [CVE-2024-9086](https://www.welivesecurity.com/en/eset-research/romcom-exploits-firefox-and-windows-zero-days-in-the-wild/)
 - Others not disclosed here. 
 
-The reason this particular issue is fingered for causing security vulnerabities is
+The reason this particular issue is fingered for causing security vulnerabilities is
 that it adds many paths for user code execution which otherwise don't exist, and
-is not always obviously a possbility.
+is not always obviously a possibility.
 
 Of particular danger is where specification authors think of newborn objects of known
 types as known quantities, only to call `Promise.resolve` on them. At this point
@@ -51,13 +51,12 @@ exist purely to work out the expected behaviour [for someone breaking `then`](ht
 
 ## How do I propose we fix this?
 
-I'd like to propose we add a "Safe Resolve" resolve operation. It is functionally identical to
-[`PromiseResolve`](https://tc39.es/ecma262/#sec-promise-resolve) except there is a pre-step where
-we check for the conditions under which we could run user-code. If we cannot run any user code, we simply
-tail-call into `PromiseResolve`. If we *could* run user-code, we instead enqueue a new job whose
-responsibility is to call into `PromiseResolve`, while also putting the promise into a 'parked' state
-such that any future resolutions are ignored (Thank you very much to Mark Miller for catching this
-requirement in TG3 review discussion).
+I'd like to propose we add a "SafeResolve" resolve operation, which resolves a promise after
+checking for the possibility of running user code.  If we cannot run any user code, we simply
+tail-call into the promise capability's `[[Resolve]]` operation. If we *could* run user-code,
+we instead enqueue a new job whose responsibility is to resolve the promise while also latching
+the promise in the same way the regular resolve functions do, such that any future resolutions
+are ignored (Thank you very much to Mark Miller for catching this requirement in TG3 review discussion).
 
 The next step is to decide how to consume this. There is interest from the Mozilla DOM to explore
 using this to replace [the steps for resolving a promise in WebIDL](https://webidl.spec.whatwg.org/#resolve)
@@ -65,8 +64,10 @@ and more generally powering all the promise resolution code in Mozilla's DOM. Th
 C++ code safer by making promise resolution into an operation that never runs script, which
 simplifies the reasoning required when implementing code.
 
-Exposing this to user-code is a non-goal of this specific proposal, but can be done as a followup
-proposal eventually
+Specification discussion about WebIDL consumption is happening at  [whatwg/webidl #1584](https://github.com/whatwg/webidl/issues/1584)
+
+**Exposing this to user-code is a non-goal of this specific proposal**, but can be done as a followup
+proposal eventually.
 
 ## Is this a bulletproof fix?
 
@@ -108,7 +109,7 @@ The vast majority of tests (as expected) pass.
 
 #### Unexpected Pass:
 
-1. [/fetch/api/response/response-body-read-task-handling.html](https://searchfox.org/firefox-main/source/testing/web-platform/tests/fetch/api/response/response-body-read-task-handling.html) \- This test is using `then` to get insight into execution order. The test no longer tests what it thinks it is testing anymore; however the test \-also- was created to address [this kind of thennable issue](https://bugzilla.mozilla.org/show_bug.cgi?id=1612308).
+1. [/fetch/api/response/response-body-read-task-handling.html](https://searchfox.org/firefox-main/source/testing/web-platform/tests/fetch/api/response/response-body-read-task-handling.html) \- This test is using `then` to get insight into execution order. The test no longer tests what it thinks it is testing anymore; however the test \-also- was created to address [this kind of thenable issue](https://bugzilla.mozilla.org/show_bug.cgi?id=1612308).
 
 #### Test Failures
 
