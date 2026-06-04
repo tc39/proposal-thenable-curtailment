@@ -80,7 +80,7 @@ This spec text is not reviewed yet and may have issues.
         _promise_: a Promise,
         _resolution_: an ECMAScript language value,
         _called_: ~sync~ or ~deferred~,
-      ): either a normal completion containing *undefined* or an abrupt completion
+      ): either a normal completion containing ~unused~ or an abrupt completion
     </h1>
     <dl class="header">
       <dt>description</dt>
@@ -91,25 +91,25 @@ This spec text is not reviewed yet and may have issues.
       1. If SameValue(_resolution_, _promise_) is *true*, then
         1. Let _selfResolutionError_ be a newly created *TypeError* object.
         1. Perform RejectPromise(_promise_, _selfResolutionError_).
-        1. Return *undefined*.
+        1. Return ~unused~.
       1. If _resolution_ is not an Object, then
         1. Perform FulfillPromise(_promise_, _resolution_).
-        1. Return *undefined*.
+        1. Return ~unused~.
       1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
       1. If _then_ is an abrupt completion, then
         1. Perform RejectPromise(_promise_, _then_.[[Value]]).
-        1. Return *undefined*.
+        1. Return ~unused~.
       1. Let _thenAction_ be _then_.[[Value]].
       1. If IsCallable(_thenAction_) is *false*, then
         1. Perform FulfillPromise(_promise_, _resolution_).
-        1. Return *undefined*.
+        1. Return ~unused~.
       1. <ins>If _called_ is ~deferred~, then</ins>
         1. <ins>Perform ? PerformPromiseResolveThenable(_promise_, _resolution_, _thenAction_).</ins>
-        1. <ins>Return *undefined*.</ins>
+        1. <ins>Return ~unused~.</ins>
       1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
       1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
       1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
-      1. Return *undefined*.
+      1. Return ~unused~.
     </emu-alg>
     <emu-note>
       <p>This overlaps heavily with the Abstract Closure inside CreateResolvingFunctions. Later work could resolve this duplication</p>
