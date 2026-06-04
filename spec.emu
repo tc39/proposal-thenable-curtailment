@@ -3,19 +3,15 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
-title: MaybeDeferredPromiseResolve (name TBD)
+title: SafePromiseResolve
 stage: 1
 contributors: Matthew Gaudet
 </pre>
 
-<emu-note>
-This spec text is not reviewed yet and may have issues.
-</emu-note>
-
 <emu-clause id="sec-safe-resolve-promise">
-  <h1>MaybeDeferredPromiseResolve Abstract Operations</h1>
+  <h1>SafePromiseResolve Abstract Operations</h1>
 
-  <p>These operations provide a mechanism for resolving a promise such that, if resolution would synchronously execute arbitrary user code, the user-code-running portion is deferred to a subsequent microtask. On return from MaybeDeferredPromiseResolve, the caller's PromiseCapability Record is guaranteed to be latched: any subsequent call to its [[Resolve]] or [[Reject]] is a no-op, regardless of whether the deferred job has yet run.</p>
+  <p>These operations provide a mechanism for resolving a promise such that, if resolution would synchronously execute arbitrary user code, the user-code-running portion is deferred to a subsequent microtask. On return from SafePromiseResolve, the caller's PromiseCapability Record is guaranteed to be latched: any subsequent call to its [[Resolve]] or [[Reject]] is a no-op, regardless of whether the deferred job has yet run.</p>
 
   <emu-clause id="sec-isgetterdescriptor" type="abstract operation">
     <h1>
@@ -215,16 +211,16 @@ This spec text is not reviewed yet and may have issues.
     </emu-alg>
   </emu-clause>
 
-  <emu-clause id="sec-maybe-deferred-promise-resolve" type="abstract operation">
+  <emu-clause id="sec-safe-promise-resolve" type="abstract operation">
     <h1>
-      MaybeDeferredPromiseResolve (
+      SafePromiseResolve (
         _promiseCapability_: a PromiseCapability Record,
         _resolution_: an ECMAScript language value,
       ): either a normal completion containing *undefined* or a throw completion
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>It resolves _promiseCapability_.[[Promise]] with _resolution_, deferring the user-code-running steps to a subsequent microtask if _resolution_ might execute user code synchronously. In either branch, _promiseCapability_'s resolving functions are latched on return.</dd>
+      <dd>It resolves _promiseCapability_.[[Promise]] with _resolution_, deferring the user-code-running steps to a subsequent microtask if _resolution_ might execute user code synchronously. In either branch, _promiseCapability_'s resolving functions are latched on return. Safe in this sense refers only to the execution of user code during the execution of the promise resolve.</dd>
     </dl>
     <emu-alg>
       1. If RequiresDeferredPromiseResolution(_resolution_) is *false*, then

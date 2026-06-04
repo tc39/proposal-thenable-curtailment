@@ -1,4 +1,4 @@
-# Curtailing the power of "Thenables"
+# Curtailing the power of "Thenables" (SafeResolve)
 
 **Champion**: Matthew Gaudet (Mozilla)
 
@@ -51,8 +51,7 @@ exist purely to work out the expected behaviour [for someone breaking `then`](ht
 
 ## How do I propose we fix this?
 
-I'd like to propose we add a (maybe-)delaying resolve operation. As per ususal naming will be a substantial
-challenging, but a general principle here would be, it is functionally identical to
+I'd like to propose we add a "Safe Resolve" resolve operation. It is functionally identical to
 [`PromiseResolve`](https://tc39.es/ecma262/#sec-promise-resolve) except there is a pre-step where
 we check for the conditions under which we could run user-code. If we cannot run any user code, we simply
 tail-call into `PromiseResolve`. If we *could* run user-code, we instead enqueue a new job whose
@@ -94,9 +93,9 @@ order. However, it is certainly plausible this could cause a web compatibility p
 
 ## Experiment: WebIDL
 
-Q: Can we use a `MaybeDeferredPromiseResolve` to replace [the promise resolution steps in WebIDL](https://webidl.spec.whatwg.org/#a-promise-resolved-with)?
+Q: Can we use a `SafePromiseResolve` to replace [the promise resolution steps in WebIDL](https://webidl.spec.whatwg.org/#a-promise-resolved-with)?
 
-Experiment: Run WPT with the Firefox DOM Promise resolve steps replaced with MaybeDeferredPromiseResolve[^1].
+Experiment: Run WPT with the Firefox DOM Promise resolve steps replaced with SafePromiseResolve[^1].
 
 ### Results:
 
