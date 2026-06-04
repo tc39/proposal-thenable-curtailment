@@ -66,12 +66,12 @@ and more generally powering all the promise resolution code in Mozilla's DOM. Th
 C++ code safer by making promise resolution into an operation that never runs script, which
 simplifies the reasoning required when implementing code.
 
-Another topic of discussion would be: If we builds this capability, do we expose it to userland code
-and if so, under what name.
+Exposing this to user-code is a non-goal of this specific proposal, but can be done as a followup
+proposal eventually
 
 ## Is this a bulletproof fix?
 
-No. The impact of this will of course depend entirely on the scope of adoption.s
+No. The impact of this will of course depend entirely on the scope of adoption.
 
 Of the previously described security bugs this mitigation would fix
 
@@ -83,8 +83,8 @@ Of the previously described security bugs this mitigation would fix
 
 It would not however fix
 
-- [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification, as
-  it's very unlikely we would adopt this new operation on that path.
+- [CVE-2024-43357](https://github.com/tc39/ecma262/security/advisories/GHSA-g38c-wh3c-5h9r) on the specification. That would
+  require a normative change to start consuming this capability _within_ the specification.
 
 ## Compatibility
 
@@ -132,4 +132,5 @@ The vast majority of tests (as expected) pass.
 ## Proposal History
 - [Presented at February 2025 Plenary](https://docs.google.com/presentation/d/1Sny2xC5ZvZPuaDw3TwqOM4mj7W6NZmR-6AMdpskBE-M/edit#slide=id.p) -- Achieved Stage 1. [(Notes)](https://github.com/tc39/notes/blob/main/meetings/2025-02/february-18.md#curtailing-the-power-of-thenables-for-stage-1)
 - [Presented at July 2025 Plenary](https://docs.google.com/presentation/d/1_RCnI7dzyA1COgi_Ib7GkmHioV1nVSEMmZvy0bvJ8Kk/edit?slide=id.p#slide=id.p). ([Notes](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-29.md#how-to-make-thenables-safer) & [Notes from Continuation](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-30.md#continuation-how-to-make-thenables-safer))
-- [Presented at March 2026 Plenary](https://docs.google.com/presentation/d/1i0jY_e-A3rkd9256VzirJdPVtHInYNGjtYq_KrTBMuo/edit?slide=id.g3cc3e467680_0_80#slide=id.g3cc3e467680_0_80) 
+- [Presented at March 2026 Plenary](https://docs.google.com/presentation/d/1i0jY_e-A3rkd9256VzirJdPVtHInYNGjtYq_KrTBMuo/edit?slide=id.g3cc3e467680_0_80#slide=id.g3cc3e467680_0_80)
+- [Presented at May 2026 Plenary](https://docs.google.com/presentation/d/1SW8xSjuWqrdix_MOE3O-ZJcR-_XgO4z2ajhJInz0IwE/view) (Notes still to be posted)
