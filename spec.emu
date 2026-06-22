@@ -25,11 +25,11 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code: that is, the property is a getter, or a Proxy is encountered on the chain.</dd>
     </dl>
     <emu-alg>
-      1. If _o_ is *null*, return *true*.
-      1. If _o_ has a [[ProxyHandler]] internal slot, return *true*.
-      1. Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).
-      1. If _desc_ is not *undefined*, return IsAccessorDescriptor(_desc_).
-      1. return HasPropertyWhichCouldRunUserCode(_o_.[[GetPrototypeOf]](), _propertyKey_).
+      1. <ins>If _o_ is *null*, return *true*.</ins>
+      1. <ins>If _o_ has a [[ProxyHandler]] internal slot, return *true*.</ins>
+      1. <ins>Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).</ins>
+      1. <ins>If _desc_ is not *undefined*, return IsAccessorDescriptor(_desc_).</ins>
+      1. <ins>return HasPropertyWhichCouldRunUserCode(_o_.[[GetPrototypeOf]](), _propertyKey_).</ins>
     </emu-alg>
     <emu-note>
       <p>This relies on ordinary [[GetPrototypeOf]] never running user code. A Proxy is handled by short-circuiting with *true* before any of its MOP is invoked. Roughly corresponds to SpiderMonkey's LookupOwnPropertyPure.</p>
@@ -47,11 +47,11 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <dd>It determines whether the synchronous steps of resolving a promise with _value_ might execute user code.</dd>
     </dl>
     <emu-alg>
-      1. If _value_ is not an Object, return *false*.
-      1. If HasPropertyWhichCouldRunUserCode(_value_, *"then"*) is *true*, return *true*.
-      1. Let _thenValue_ be ! _value_.[[Get]](*"then"*).
-      1. If IsCallable(_thenValue_) is *true*, return *true*.
-      1. Return *false*.
+      1. <ins>If _value_ is not an Object, return *false*.</ins>
+      1. <ins>If HasPropertyWhichCouldRunUserCode(_value_, *"then"*) is *true*, return *true*.</ins>
+      1. <ins>Let _thenValue_ be ! _value_.[[Get]](*"then"*).</ins>
+      1. <ins>If IsCallable(_thenValue_) is *true*, return *true*.</ins>
+      1. <ins>Return *false*.</ins>
     </emu-alg>
   </emu-clause>
 
@@ -69,28 +69,28 @@ contributors: Matthew Gaudet, Justin Ridgewell
     </dl>
     <emu-alg>
       1. <ins>Assert: _promise_ has a [[PromiseState]] internal slot.</ins>
-      1. If SameValue(_resolution_, _promise_) is *true*, then
-        1. Let _selfResolutionError_ be a newly created *TypeError* object.
-        1. Perform RejectPromise(_promise_, _selfResolutionError_).
-        1. Return ~unused~.
-      1. If _resolution_ is not an Object, then
-        1. Perform FulfillPromise(_promise_, _resolution_).
-        1. Return ~unused~.
-      1. Let _then_ be Completion(Get(_resolution_, *"then"*)).
-      1. If _then_ is an abrupt completion, then
-        1. Perform RejectPromise(_promise_, _then_.[[Value]]).
-        1. Return ~unused~.
-      1. Let _thenAction_ be _then_.[[Value]].
-      1. If IsCallable(_thenAction_) is *false*, then
-        1. Perform FulfillPromise(_promise_, _resolution_).
-        1. Return ~unused~.
+      1. <ins>If SameValue(_resolution_, _promise_) is *true*, then</ins>
+        1. <ins>Let _selfResolutionError_ be a newly created *TypeError* object.</ins>
+        1. <ins>Perform RejectPromise(_promise_, _selfResolutionError_).</ins>
+        1. <ins>Return ~unused~.</ins>
+      1. <ins>If _resolution_ is not an Object, then</ins>
+        1. <ins>Perform FulfillPromise(_promise_, _resolution_).</ins>
+        1. <ins>Return ~unused~.</ins>
+      1. <ins>Let _then_ be Completion(Get(_resolution_, *"then"*)).</ins>
+      1. <ins>If _then_ is an abrupt completion, then</ins>
+        1. <ins>Perform RejectPromise(_promise_, _then_.[[Value]]).</ins>
+        1. <ins>Return ~unused~.</ins>
+      1. <ins>Let _thenAction_ be _then_.[[Value]].</ins>
+      1. <ins>If IsCallable(_thenAction_) is *false*, then</ins>
+        1. <ins>Perform FulfillPromise(_promise_, _resolution_).</ins>
+        1. <ins>Return ~unused~.</ins>
       1. <ins>If _called_ is ~deferred~, then</ins>
         1. <ins>Perform ? PerformPromiseResolveThenable(_promise_, _resolution_, _thenAction_).</ins>
         1. <ins>Return ~unused~.</ins>
-      1. Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).
-      1. Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).
-      1. Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).
-      1. Return ~unused~.
+      1. <ins>Let _thenJobCallback_ be HostMakeJobCallback(_thenAction_).</ins>
+      1. <ins>Let _job_ be NewPromiseResolveThenableJob(_promise_, _resolution_, _thenJobCallback_).</ins>
+      1. <ins>Perform HostEnqueuePromiseJob(_job_.[[Job]], _job_.[[Realm]]).</ins>
+      1. <ins>Return ~unused~.</ins>
     </emu-alg>
   </emu-clause>
 
@@ -134,14 +134,14 @@ contributors: Matthew Gaudet, Justin Ridgewell
     <dl class="header">
     </dl>
     <emu-alg>
-      1. Let _resolvingFunctions_ be CreateResolvingFunctions(_promiseToResolve_).
-      1. If _then_ is a function object, then
-        1. Let _thenCallResult_ be Completion(Call(_then_, _thenable_, « _resolvingFunctions_.[[Resolve]], _resolvingFunctions_.[[Reject]] »)).
-      1. Else,
-        1. Let _thenCallResult_ be Completion(HostCallJobCallback(_then_, _thenable_, « _resolvingFunctions_.[[Resolve]], _resolvingFunctions_.[[Reject]] »)).
-      1. If _thenCallResult_ is an abrupt completion, then
-        1. Return ? Call(_resolvingFunctions_.[[Reject]], *undefined*, « _thenCallResult_.[[Value]] »).
-      1. Return ! _thenCallResult_.
+      1. <ins>Let _resolvingFunctions_ be CreateResolvingFunctions(_promiseToResolve_).</ins>
+      1. <ins>If _then_ is a function object, then</ins>
+        1. <ins>Let _thenCallResult_ be Completion(Call(_then_, _thenable_, « _resolvingFunctions_.[[Resolve]], _resolvingFunctions_.[[Reject]] »)).</ins>
+      1. <ins>Else,</ins>
+        1. <ins>Let _thenCallResult_ be Completion(HostCallJobCallback(_then_, _thenable_, « _resolvingFunctions_.[[Resolve]], _resolvingFunctions_.[[Reject]] »)).</ins>
+      1. <ins>If _thenCallResult_ is an abrupt completion, then</ins>
+        1. <ins>Return ? Call(_resolvingFunctions_.[[Reject]], *undefined*, « _thenCallResult_.[[Value]] »).</ins>
+      1. <ins>Return ! _thenCallResult_.</ins>
     </emu-alg>
   </emu-clause>
 
@@ -205,16 +205,16 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <dd>It resolves _promiseCapability_.[[Promise]] with _resolution_, deferring the user-code-running steps to a subsequent microtask if _resolution_ might execute user code synchronously. In either branch, _promiseCapability_'s resolving functions are latched on return. Safe in this sense refers only to the execution of user code during the execution of the promise resolve.</dd>
     </dl>
     <emu-alg>
-      1. If RequiresDeferredPromiseResolution(_resolution_) is *false*, then
-        1. Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).
-      1. Let _promise_ be _promiseCapability_.[[Promise]].
-      1. Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:
-        1. Perform ? PerformPromiseResolution(_promise_, _resolution_, ~deferred~).
-        1. Return *undefined*.
-      1. Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).
-      1. Let _wrapper_ be OrdinaryObjectCreate(*null*).
-      1. Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).
-      1. Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _wrapper_ »).
+      1. <ins>If RequiresDeferredPromiseResolution(_resolution_) is *false*, then</ins>
+        1. <ins>Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).</ins>
+      1. <ins>Let _promise_ be _promiseCapability_.[[Promise]].</ins>
+      1. <ins>Let _deferredSteps_ be a new Abstract Closure with parameters (_onFulfilled_, _onRejected_) that captures _promise_ and _resolution_ and performs the following steps when called:</ins>
+        1. <ins>Perform ? PerformPromiseResolution(_promise_, _resolution_, ~deferred~).</ins>
+        1. <ins>Return *undefined*.</ins>
+      1. <ins>Let _deferredThen_ be CreateBuiltinFunction(_deferredSteps_, 2, *""*, « »).</ins>
+      1. <ins>Let _wrapper_ be OrdinaryObjectCreate(*null*).</ins>
+      1. <ins>Perform ! CreateDataPropertyOrThrow(_wrapper_, *"then"*, _deferredThen_).</ins>
+      1. <ins>Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _wrapper_ »).</ins>
     </emu-alg>
     <emu-note>
       <p>This idea is thanks to Justin Ridgewell who suggested the wrapper idea.</p>
