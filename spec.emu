@@ -13,20 +13,6 @@ contributors: Matthew Gaudet, Justin Ridgewell
 
   <p>These operations provide a mechanism for resolving a promise such that, if resolution would synchronously execute arbitrary user code, the user-code-running portion is deferred to a subsequent microtask. On return from SafePromiseResolve, the caller's PromiseCapability Record is guaranteed to be latched: any subsequent call to its [[Resolve]] or [[Reject]] is a no-op, regardless of whether the deferred job has yet run.</p>
 
-  <emu-clause id="sec-isgetterdescriptor" type="abstract operation">
-    <h1>
-      IsGetterDescriptor (
-        _Desc_: a Property Descriptor,
-      ): a Boolean
-    </h1>
-    <dl class="header">
-    </dl>
-    <emu-alg>
-      1. If _Desc_ has a [[Get]] field, return *true*.
-      1. Return *false*.
-    </emu-alg>
-  </emu-clause>
-
   <emu-clause id="sec-has-property-which-could-run-user-code" type="abstract operation">
     <h1>
       HasPropertyWhichCouldRunUserCode (
@@ -39,12 +25,11 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code: that is, the property is a getter, or a Proxy is encountered on the chain.</dd>
     </dl>
     <emu-alg>
-      1. Repeat, while _o_ is not *null*,
-        1. If _o_ has a [[ProxyHandler]] internal slot, return *true*.
-        1. Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).
-        1. If _desc_ is not *undefined*, return IsGetterDescriptor(_desc_).
-        1. Set _o_ to _o_.[[GetPrototypeOf]]().
-      1. Return *false*.
+      1. If _o_ is *null*, return *true*.
+      1. If _o_ has a [[ProxyHandler]] internal slot, return *true*.
+      1. Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).
+      1. If _desc_ is not *undefined*, return IsAccessorDescriptor(_desc_).
+      1. return HasPropertyWhichCouldRunUserCode(_o_.[[GetPrototypeOf]](), _propertyKey_).
     </emu-alg>
     <emu-note>
       <p>This relies on ordinary [[GetPrototypeOf]] never running user code. A Proxy is handled by short-circuiting with *true* before any of its MOP is invoked. Roughly corresponds to SpiderMonkey's LookupOwnPropertyPure.</p>
