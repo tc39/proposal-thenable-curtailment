@@ -26,7 +26,7 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code when performing the operation of _kind_: that is, the property is a getter, setter, or a Proxy is encountered on the chain.</dd>
     </dl>
     <emu-alg>
-      1. <ins>If _o_ is *null*, return *true*.</ins>
+      1. <ins>If _o_ is *null*, return *false*.</ins>
       1. <ins>If _o_ has a [[ProxyHandler]] internal slot, return *true*.</ins>
       1. <ins>Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).</ins>
       1. <ins>If _desc_ is not *undefined*, then</ins>
@@ -35,7 +35,7 @@ contributors: Matthew Gaudet, Justin Ridgewell
       1. <ins>return HasPropertyWhichCouldRunUserCode(_o_.[[GetPrototypeOf]](), _propertyKey_, _kind_).</ins>
     </emu-alg>
     <emu-note>
-      <p>This relies on ordinary [[GetPrototypeOf]] never running user code. A Proxy is handled by short-circuiting with *true* before any of its MOP is invoked. Roughly corresponds to SpiderMonkey's LookupOwnPropertyPure.</p>
+      <p>This relies on ordinary [[GetPrototypeOf]] never running user code. A Proxy is handled by short-circuiting with *true* before any of its MOP is invoked.</p>
     </emu-note>
   </emu-clause>
 
