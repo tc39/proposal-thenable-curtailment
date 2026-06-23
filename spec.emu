@@ -18,18 +18,21 @@ contributors: Matthew Gaudet, Justin Ridgewell
       HasPropertyWhichCouldRunUserCode (
         _o_: an Object,
         _propertyKey_: a property key,
+        _kind_: ~any~, ~set~ or ~get~
       ): a Boolean
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code: that is, the property is a getter, or a Proxy is encountered on the chain.</dd>
+      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if retrieving the property could run user code when performing the operation of _kind_: that is, the property is a getter, setter, or a Proxy is encountered on the chain.</dd>
     </dl>
     <emu-alg>
       1. <ins>If _o_ is *null*, return *true*.</ins>
       1. <ins>If _o_ has a [[ProxyHandler]] internal slot, return *true*.</ins>
       1. <ins>Let _desc_ be _o_.[[GetOwnProperty]](_propertyKey_).</ins>
-      1. <ins>If _desc_ is not *undefined*, return IsAccessorDescriptor(_desc_).</ins>
-      1. <ins>return HasPropertyWhichCouldRunUserCode(_o_.[[GetPrototypeOf]](), _propertyKey_).</ins>
+      1. <ins>If _desc_ is not *undefined*, then</ins>
+        1. <ins>If _desc_ has a [[Get]] field and kind is ~any~ or ~get~, return *true*.</ins>
+        1. <ins>If _desc_ has a [[Set]] field and kind is ~any~ or ~set~, return *true*.</ins>
+      1. <ins>return HasPropertyWhichCouldRunUserCode(_o_.[[GetPrototypeOf]](), _propertyKey_, _kind_).</ins>
     </emu-alg>
     <emu-note>
       <p>This relies on ordinary [[GetPrototypeOf]] never running user code. A Proxy is handled by short-circuiting with *true* before any of its MOP is invoked. Roughly corresponds to SpiderMonkey's LookupOwnPropertyPure.</p>
@@ -48,7 +51,7 @@ contributors: Matthew Gaudet, Justin Ridgewell
     </dl>
     <emu-alg>
       1. <ins>If _value_ is not an Object, return *false*.</ins>
-      1. <ins>If HasPropertyWhichCouldRunUserCode(_value_, *"then"*) is *true*, return *true*.</ins>
+      1. <ins>If HasPropertyWhichCouldRunUserCode(_value_, *"then"*, ~get~) is *true*, return *true*.</ins>
       1. <ins>Let _thenValue_ be ! _value_.[[Get]](*"then"*).</ins>
       1. <ins>If IsCallable(_thenValue_) is *true*, return *true*.</ins>
       1. <ins>Return *false*.</ins>
