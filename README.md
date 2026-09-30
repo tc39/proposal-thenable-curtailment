@@ -2,7 +2,7 @@
 
 **Champion**: Matthew Gaudet (Mozilla)
 
-**Stage**: 2.7 (As of July 2026 Plenary)
+**Stage**: 3 (As of September 2026 Plenary)
 
 **Draft Spec Text**: https://tc39.es/proposal-thenable-curtailment/
 
@@ -134,4 +134,5 @@ The vast majority of tests (as expected) pass.
 - [Presented at July 2025 Plenary](https://docs.google.com/presentation/d/1_RCnI7dzyA1COgi_Ib7GkmHioV1nVSEMmZvy0bvJ8Kk/edit?slide=id.p#slide=id.p). ([Notes](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-29.md#how-to-make-thenables-safer) & [Notes from Continuation](https://github.com/tc39/notes/blob/main/meetings/2025-07/july-30.md#continuation-how-to-make-thenables-safer))
 - [Presented at March 2026 Plenary](https://docs.google.com/presentation/d/1i0jY_e-A3rkd9256VzirJdPVtHInYNGjtYq_KrTBMuo/edit?slide=id.g3cc3e467680_0_80#slide=id.g3cc3e467680_0_80)
 - [Presented at May 2026 Plenary](https://docs.google.com/presentation/d/1SW8xSjuWqrdix_MOE3O-ZJcR-_XgO4z2ajhJInz0IwE/view) [(Notes)](https://github.com/tc39/notes/blob/main/meetings/2026-03/march-12.md#thenable-curtailment-for-stage-2)
-- [Presented at July 2026 Plenary](https://docs.google.com/presentation/d/1kHq_UqMHGGT8ena8yMlJKgHmohDVqxJvV4hiCB12HtU/edit?slide=id.g3cc3e467680_0_2#slide=id.g3cc3e467680_0_2), achieving Stage 2.7 (Notes forthcoming) 
+- [Presented at July 2026 Plenary](https://docs.google.com/presentation/d/1kHq_UqMHGGT8ena8yMlJKgHmohDVqxJvV4hiCB12HtU/edit?slide=id.g3cc3e467680_0_2#slide=id.g3cc3e467680_0_2), achieving Stage 2.7 (Notes: [Initial presentation](https://docs.google.com/presentation/d/1Gs5s56q0znHMX5mfup4PslGUrnM3_ngeaUqXy3STt2A/edit?usp=sharing), [Continuation](https://github.com/tc39/notes/blob/main/meetings/2026-07/july-22.md#continuation-thenable-curtailment-for-27)
+- [Presented at September 2026 Plenary](https://docs.google.com/presentation/d/1Gs5s56q0znHMX5mfup4PslGUrnM3_ngeaUqXy3STt2A/edit?usp=sharing), achieving Stage 3 (Notes forthcoming) 
