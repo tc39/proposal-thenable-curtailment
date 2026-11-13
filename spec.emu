@@ -220,7 +220,7 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <emu-alg>
         1. <ins>If _value_ is not an Object, return *false*.</ins>
         1. <ins>If PropertyAccessCouldRunUserCode(_value_, *"then"*, ~get~) is *true*, return *true*.</ins>
-        1. <ins>Let _thenValue_ be ! _value_.[[Get]](*"then"*).</ins>
+        1. <ins>Let _thenValue_ be ! Get(_value_, *"then"*).</ins>
         1. <ins>If IsCallable(_thenValue_) is *true*, return *true*.</ins>
         1. <ins>Return *false*.</ins>
       </emu-alg>
