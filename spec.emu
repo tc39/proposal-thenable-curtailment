@@ -36,7 +36,7 @@ contributors: Matthew Gaudet, Justin Ridgewell
           1. <ins>If _kind_ is either ~any~ or ~get~, and _desc_.[[Get]] is not *undefined*, return *true*.</ins>
           1. <ins>If _kind_ is either ~any~ or ~set~, and _desc_.[[Set]] is not *undefined*, return *true*.</ins>
         1. <ins>Return *false*.</ins>
-      1. <ins>Let _proto_ be _o_.[[GetPrototypeOf]]().</ins>
+      1. <ins>Let _proto_ be ! _o_.[[GetPrototypeOf]]().</ins>
       1. <ins>If _proto_ is *null*, return *false*.</ins>
       1. <ins>Return PropertyAccessCouldRunUserCode(_proto_, _propertyKey_, _kind_).</ins>
     </emu-alg>
