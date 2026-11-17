@@ -192,6 +192,7 @@ contributors: Matthew Gaudet, Justin Ridgewell
       <dd>It resolves _promiseCapability_.[[Promise]] with _resolution_, deferring the user-code-running steps to a subsequent microtask if _resolution_ might execute user code synchronously. In either branch, _promiseCapability_'s resolving functions are latched on return. Safe in this sense refers only to the execution of user code during the execution of the promise resolve.</dd>
     </dl>
     <emu-alg>
+      1. <ins>Assert: _promiseCapability_.[[Resolve]] was created by CreateResolvingFunctions.</ins>
       1. <ins>If RequiresDeferredPromiseResolution(_resolution_) is *false*, then</ins>
         1. <ins>Return ? Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).</ins>
       1. <ins>Let _promise_ be _promiseCapability_.[[Promise]].</ins>
