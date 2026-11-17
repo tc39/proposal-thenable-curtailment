@@ -23,13 +23,13 @@ contributors: Matthew Gaudet, Justin Ridgewell
     </h1>
     <dl class="header">
       <dt>description</dt>
-      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if accessing the property could run user code when performing an operation of _kind_: that is, the property is an accessor whose accessor function for _kind_ is present, or a Proxy exotic object, a module namespace exotic object, or a host object with impure lookup internal methods is encountered on the chain. This should never run user code.</dd>
+      <dd>It walks the prototype chain of _o_ looking for _propertyKey_, returning *true* if accessing the property could run user code when performing an operation of _kind_: that is, the property is an accessor whose accessor function for _kind_ is present, or a Proxy exotic object, a module namespace exotic object, or an object with a host-defined lookup internal method that the host has not declared pure is encountered on the chain. This should never run user code.</dd>
     </dl>
     <emu-alg>
       1. <ins>Assert: The following steps do not run user code.</ins>
       1. <ins>If _o_ has the [[GetPrototypeOf]] and [[GetOwnProperty]] internal methods as defined in <emu-xref href="#sec-proxy-object-internal-methods-and-internal-slots"></emu-xref>, return *true*.</ins>
       1. <ins>If _o_ has the [[GetPrototypeOf]] and [[GetOwnProperty]] internal methods as defined in <emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref>, return *true*.</ins>
-      1. <ins>If HostObjectHasImpureLookupInternalMethods(_o_) is *true*, return *true*.</ins>
+      1. <ins>If _o_ has a [[GetPrototypeOf]] or [[GetOwnProperty]] internal method that is not defined in this specification, and HostObjectHasPureLookupInternalMethods(_o_) is *false*, return *true*.</ins>
       1. <ins>Let _desc_ be ! _o_.[[GetOwnProperty]](_propertyKey_).</ins>
       1. <ins>If _desc_ is not *undefined*, then</ins>
         1. <ins>If IsAccessorDescriptor(_desc_) is *true*, then</ins>
@@ -40,6 +40,9 @@ contributors: Matthew Gaudet, Justin Ridgewell
       1. <ins>If _proto_ is *null*, return *false*.</ins>
       1. <ins>Return PropertyAccessCouldRunUserCode(_proto_, _propertyKey_, _kind_).</ins>
     </emu-alg>
+    <emu-note>
+      <p>Objects whose [[GetOwnProperty]] and [[GetPrototypeOf]] are defined in this specification (ordinary objects and the exotic objects defined here other than Proxy exotic objects and module namespace exotic objects) are known not to run user code from those internal methods, so the walk inspects them directly. Any other object is treated as possibly running user code unless the host has declared it pure. A host that defines an exotic object without updating HostObjectHasPureLookupInternalMethods fails safely to deferred, rather than synchronous, promise resolution for that exotic object.</p>
+    </emu-note>
   </emu-clause>
 
   <emu-clause id="sec-perform-promise-resolution" type="abstract operation">
@@ -228,22 +231,28 @@ contributors: Matthew Gaudet, Justin Ridgewell
   </emu-clause>
 </emu-clause>
 
-<emu-clause id="sec-hosthasinternalmethodswhichcanrunusercode" type="host-defined abstract operation">
+<emu-clause id="sec-hostobjecthaspurelookupinternalmethods" oldids="sec-hosthasinternalmethodswhichcanrunusercode" type="host-defined abstract operation">
   <h1>
-    HostObjectHasImpureLookupInternalMethods (
+    HostObjectHasPureLookupInternalMethods (
       _object_: an Object,
     ): a Boolean
   </h1>
   <dl class="header">
     <dt>description</dt>
-    <dd>Indicates if a host object overrides the methods [[GetOwnProperty]] or [[GetPrototypeOf]] in such a way that user code could run.</dd>
+    <dd>Indicates if a host object whose [[GetOwnProperty]] or [[GetPrototypeOf]] internal method is not defined in this specification is guaranteed not to run user code from either of those internal methods.</dd>
   </dl>
 
-  <p>An implementation of HostObjectHasImpureLookupInternalMethods should return *true* if the given object is a host defined object with its own definition of [[GetOwnProperty]] or [[GetPrototypeOf]] such that
-  user code could run. </p>
-  <p>An implementation of HostObjectHasImpureLookupInternalMethods cannot run user code.</p>
+  <p>An implementation of HostObjectHasPureLookupInternalMethods must conform to the following requirements:</p>
+  <ul>
+    <li>It must not run user code.</li>
+    <li>It may return *true* only if, for every property key _P_, neither _object_.[[GetOwnProperty]](_P_) nor _object_.[[GetPrototypeOf]]() can run user code.</li>
+  </ul>
 
-  <p>The default implementation of HostObjectHasImpureLookupInternalMethods is to return *false*.</p>
+  <p>The default implementation of HostObjectHasPureLookupInternalMethods is to return *false*.</p>
+
+  <emu-note>
+    <p>Returning *false* is always safe: it only causes promise resolution involving _object_ to be deferred by a microtask. Given that the decision to defer or not is observable through the timing of promise resolution, hosts should attempt to accurate list pure methods.</p>
+  </emu-note>
 </emu-clause>
 
 <emu-annex id="sec-host-hooks-summary">
@@ -264,5 +273,5 @@ contributors: Matthew Gaudet, Justin Ridgewell
   <p><b>HostPromiseRejectionTracker(...)</b></p>
   <p><b>HostResizeArrayBuffer(...)</b></p>
   <p><b>InitializeHostDefinedRealm(...)</b></p>
-  <ins><p><b>HostObjectHasImpureLookupInternalMethods(...)</b></p></ins>
+  <ins><p><b>HostObjectHasPureLookupInternalMethods(...)</b></p></ins>
 </emu-annex>
